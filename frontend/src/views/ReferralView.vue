@@ -1,5 +1,6 @@
 <template>
   <div class="referral-view">
+    <BackButton />
     <div class="scrollable-content">
       <h1 class="referral-title">Реферальная<br>программа</h1>
       <div class="stats-container">
@@ -26,6 +27,7 @@ import ReferralLink from '@/components/ReferralLink.vue';
 import ReferralUser from '@/components/ReferralUser.vue';
 import InfoBanner from '@/components/InfoBanner.vue';
 import DashboardButton from '@/components/DashboardButton.vue';
+import BackButton from '@/components/BackButton.vue';
 
 export default defineComponent({
   name: 'ReferralView',
@@ -35,6 +37,7 @@ export default defineComponent({
     ReferralUser,
     InfoBanner,
     DashboardButton,
+    BackButton,
   },
   setup() {
     const router = useRouter();

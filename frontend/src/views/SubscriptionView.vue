@@ -1,5 +1,6 @@
 <template>
   <div class="subscription-view">
+    <BackButton />
     <div class="scrollable-content">
       <h1 class="tariff-title">Тарифный план</h1>
       <TariffPlan
@@ -23,12 +24,14 @@ import { defineComponent, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import TariffPlan from '@/components/TariffPlan.vue';
 import DashboardButton from '@/components/DashboardButton.vue';
+import BackButton from '@/components/BackButton.vue';
 
 export default defineComponent({
   name: 'SubscriptionView',
   components: {
     TariffPlan,
     DashboardButton,
+    BackButton,
   },
   setup() {
     const router = useRouter();

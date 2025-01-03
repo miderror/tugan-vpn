@@ -1,5 +1,6 @@
 <template>
   <div class="vpn-view">
+    <BackButton />
     <div class="scrollable-content">
       <h1 class="setup-title">Быстрая настройка<br>VPN-сервиса</h1>
       <div class="content-container">
@@ -48,11 +49,12 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import Stepper from '../components/Stepper.vue';
-import StepCard from '../components/StepCard.vue';
-import SvgIcon from '../components/SvgIcon.vue';
-import InfoBanner from '../components/InfoBanner.vue';
-import DashboardButton from '../components/DashboardButton.vue';
+import Stepper from '@/components/Stepper.vue';
+import StepCard from '@/components/StepCard.vue';
+import SvgIcon from '@/components/SvgIcon.vue';
+import InfoBanner from '@/components/InfoBanner.vue';
+import DashboardButton from '@/components/DashboardButton.vue';
+import BackButton from '@/components/BackButton.vue';
 
 export default defineComponent({
   name: 'VpnView',
@@ -62,6 +64,7 @@ export default defineComponent({
     SvgIcon,
     InfoBanner,
     DashboardButton,
+    BackButton,
   },
   setup() {
     const steps = ref([
