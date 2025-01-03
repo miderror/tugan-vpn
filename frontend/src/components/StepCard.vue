@@ -14,7 +14,7 @@
         class="step-icon"
       />
     </div>
-    <div v-if="isActive" class="step-content">
+    <div v-if="isActive" class="step-content" @click.stop>
       <slot></slot>
     </div>
   </div>
@@ -83,9 +83,13 @@ export default defineComponent({
   cursor: pointer;
 }
 
-/* .step-card.active {
-  border: 1px solid #121212;
-} */
+.step-card.active {
+  cursor: default;
+}
+
+.primary-button, .secondary-button {
+  cursor: pointer;
+}
 
 .step-header {
   display: flex;

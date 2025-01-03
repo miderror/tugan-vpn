@@ -2,16 +2,17 @@
   <div class="referral-user-card">
     <div class="user-info">
       <div class="avatar-container">
-        <img
-          v-if="user.avatar"
-          :src="user.avatar"
-          alt="User avatar"
-          class="user-avatar"
-        />
         <SvgIcon
-          v-else
-          :iconName="'user-default-icon'"
-          class="user-default-icon"
+            v-if="!imageLoaded"
+            :iconName="'user-default-icon'"
+            class="user-default-icon"
+        />
+        <img
+            v-show="user.avatar && imageLoaded"
+            :src="user.avatar"
+            alt="User avatar"
+            class="user-avatar"
+            @load="handleImageLoad"
         />
       </div>
       <div class="username">{{ user.username }}</div>
@@ -21,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, ref } from 'vue';
 import SvgIcon from './SvgIcon.vue';
 
 export default defineComponent({
@@ -34,6 +35,18 @@ export default defineComponent({
       type: Object,
       required: true,
     },
+  },
+  setup(props) {
+    const imageLoaded = ref(false);
+
+    const handleImageLoad = () => {
+      imageLoaded.value = true;
+    };
+
+    return {
+      imageLoaded,
+      handleImageLoad,
+    };
   },
 });
 </script>

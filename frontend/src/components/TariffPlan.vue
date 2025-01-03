@@ -100,17 +100,27 @@ export default defineComponent({
 }
 
 .plan-price {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-style: normal;
   font-weight: 600;
   font-size: 20px;
-  line-height: 1;
   margin-top: 4px;
+  line-height: 20px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .plan-total {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-style: normal;
   font-weight: 600;
   font-size: 14px;
   color: #8d8c8f;
   margin-top: 4px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .plan-total-wrapper {
@@ -121,10 +131,15 @@ export default defineComponent({
 }
 
 .original-price {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-style: normal;
   color: #ff0000;
   font-weight: 400;
   font-size: 10px;
   position: relative;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .strike-line {

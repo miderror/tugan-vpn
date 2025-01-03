@@ -1,1 +1,2 @@
-export { fetchCurrentUser, getTelegramUserAvatar, handleReferral } from './userApi';
+export { fetchCurrentUser, getTelegramUserAvatar } from './userApi';
+export { fetchReferralData, handleReferral } from './referralApi'

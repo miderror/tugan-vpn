@@ -3,10 +3,10 @@
       <use :xlink:href="`#icon-${iconName}`" />
     </svg>
   </template>
-  
+
   <script lang="ts">
   import { defineComponent } from 'vue';
-  
+
   export default defineComponent({
     name: 'SvgIcon',
     props: {
@@ -17,7 +17,7 @@
     },
   });
   </script>
-  
+
   <style scoped>
   .svg-icon {
     width: 1em;

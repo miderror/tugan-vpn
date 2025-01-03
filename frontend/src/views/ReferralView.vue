@@ -19,7 +19,7 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getTelegramUserAvatar } from '@/api';
+import { fetchReferralData, getTelegramUserAvatar } from '@/api';
 import { useTwaSdk } from '@/composables/useTwaSdk';
 import StatsBox from '@/components/StatsBox.vue';
 import ReferralLink from '@/components/ReferralLink.vue';
@@ -40,40 +40,9 @@ export default defineComponent({
     const router = useRouter();
     const { getUserData } = useTwaSdk();
     const referralBalance = ref(100);
-    const referralCount = ref(2);
+    const referralCount = ref(0);
     const referralLink = ref('https://t.me/your_referral_link');
-    const referralUsers = ref([
-      {
-        id: 1699267593,
-        username: 'user1',
-        avatar: '',
-      },
-      {
-        id: 1699267593,
-        username: 'user2',
-        avatar: '',
-      },
-      {
-        id: 1699267593,
-        username: 'user2',
-        avatar: '',
-      },
-      {
-        id: 2,
-        username: 'user2',
-        avatar: '',
-      },
-      {
-        id: 2,
-        username: 'user2',
-        avatar: '',
-      },
-      {
-        id: 1699267593,
-        username: 'user2',
-        avatar: '',
-      },
-    ]);
+    const referralUsers = ref([]);
 
     onMounted(async () => {
       const userData = getUserData();
@@ -83,9 +52,15 @@ export default defineComponent({
         referralLink.value = `https://t.me/${botUsername}/${appName}?startapp=${userData.id}`;
       }
 
-      for (const user of referralUsers.value) {
-        user.avatar = (await getTelegramUserAvatar(user.id)) || '';
-      }
+      try {
+        const referralData = await fetchReferralData();
+        referralUsers.value = referralData.map(user => ({
+          id: user.id,
+          username: user.username,
+          avatar: getTelegramUserAvatar(user.id),
+        }));
+        referralCount.value = referralData.length;
+      } catch (error) {}
     });
 
     return {

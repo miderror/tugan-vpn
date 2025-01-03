@@ -8,8 +8,8 @@
           <SvgIcon :iconName="'user-icon'" class="user-icon" />
         </div>
         <div class="stats-container">
-          <StatsBox label="Использовано" :value="usage" />
-          <StatsBox label="Подписка до" :value="subscriptionDate" />
+          <StatsBox label="Использовано:" :value="usage" />
+          <StatsBox label="Подписка до:" :value="subscriptionDate" />
         </div>
       </div>
       <div class="buttons-container">
@@ -140,8 +140,8 @@ export default defineComponent({
 }
 
 .logo {
-  width: 250px;
-  height: auto;
+  width: 240px;
+  height: 114px;
   align-self: center;
   margin-bottom: 10px;
 }

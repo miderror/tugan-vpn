@@ -17,21 +17,21 @@
           >
             <div v-if="activeStep === index + 1">
               <div v-if="index === 0">
-                <button class="primary-button">
+                <button class="primary-button" @click.stop="openDownloadPage">
                   <SvgIcon :iconName="'download-icon'" class="download-icon" />
                   <span>Скачать</span>
                 </button>
               </div>
               <div v-if="index === 1" class="step-buttons-container">
-                <button class="primary-button">Подключиться</button>
+                <button class="primary-button" @click.stop="handleConnect">Подключиться</button>
                 <span class="divider-text">или</span>
-                <button class="secondary-button">Скопировать конфиг</button>
+                <button class="secondary-button" @click.stop="handleCopyConfig">Скопировать конфиг</button>
               </div>
               <div v-if="index === 2">
                 <p class="step-description">
                   При добавлении роутинга, сайты внутри страны будут открываться без VPN
                 </p>
-                <button class="primary-button">
+                <button class="primary-button" @click.stop="handleAddRule">
                   <SvgIcon :iconName="'russia-flag-icon'" class="flag-icon" />
                   <span class="rule-text">Добавить правило: Сайты РФ напрямую</span>
                 </button>
@@ -96,6 +96,23 @@ export default defineComponent({
       dividerHeights.value[index] = height + gapHeight - circleHeight - dividerVerticalMargin;
     };
 
+    const openDownloadPage = (): void => {
+      console.log('Скачивание приложения...');
+    };
+
+    const handleConnect = (): void => {
+      console.log('Подключение к VPN...');
+    };
+
+    const handleCopyConfig = (): void => {
+      console.log('Копирование конфигурации...');
+    };
+
+    const handleAddRule = (): void => {
+      console.log('Добавление правила...');
+    };
+
+
     return {
       steps,
       stepDescriptions,
@@ -103,6 +120,10 @@ export default defineComponent({
       dividerHeights,
       handleStepToggle,
       handleHeightChange,
+      openDownloadPage,
+      handleConnect,
+      handleCopyConfig,
+      handleAddRule,
     };
   },
 });
