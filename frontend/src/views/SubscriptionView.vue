@@ -14,7 +14,7 @@
         @select-plan="selectPlan(plan.id)"
       />
     </div>
-    <DashboardButton />
+    <DashboardButton class="dashboard-button" />
   </div>
 </template>
 
@@ -89,12 +89,12 @@ export default defineComponent({
   padding: 20px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   height: 100vh;
   box-sizing: border-box;
 }
 
 .scrollable-content {
+  flex: 1;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -107,5 +107,10 @@ export default defineComponent({
   font-weight: 600;
   line-height: 31px;
   text-align: center;
+}
+
+.dashboard-button {
+  flex-shrink: 0;
+  margin-top: auto;
 }
 </style>

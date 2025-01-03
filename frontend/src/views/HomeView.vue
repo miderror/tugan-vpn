@@ -135,7 +135,6 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-height: 700px;
   gap: 20px;
 }
 
@@ -151,6 +150,7 @@ export default defineComponent({
   flex-direction: column;
   gap: 10px;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .user-header {
@@ -178,7 +178,7 @@ export default defineComponent({
   display: flex;
   gap: 8px;
   width: 100%;
-  flex-shrink: 1
+  flex-shrink: 1;
 }
 
 .stats-container .stats-box {
@@ -191,6 +191,7 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: 30px;
+  flex-shrink: 0;
 }
 
 .action-buttons {

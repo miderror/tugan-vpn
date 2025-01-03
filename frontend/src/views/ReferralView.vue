@@ -10,9 +10,9 @@
       <div class="referral-list">
         <ReferralUser v-for="user in referralUsers" :key="user.id" :user="user" />
       </div>
-      <InfoBanner text="С каждого вашего реферала вы будете получать дополнительные 2 недели доступа" />
+      <InfoBanner class="info-banner" text="С каждого вашего реферала вы будете получать дополнительные 2 недели доступа" />
     </div>
-    <DashboardButton />
+    <DashboardButton class="dashboard-button" />
   </div>
 </template>
 
@@ -90,6 +90,7 @@ export default defineComponent({
   flex-direction: column;
   overflow-y: auto;
   padding-bottom: 20px;
+  flex: 1;
 }
 
 .info-banner {
@@ -117,10 +118,11 @@ export default defineComponent({
 }
 
 .referral-list {
-  margin: 10px 0px;
+  margin: 12px 0px;
 }
 
 .dashboard-button {
   flex-shrink: 0;
+  margin-top: auto
 }
 </style>

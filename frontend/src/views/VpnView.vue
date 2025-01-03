@@ -6,14 +6,14 @@
         <Stepper :steps="steps" :dividerHeights="dividerHeights" :activeStep="activeStep" />
         <div class="steps-container">
           <StepCard
-            v-for="(step, index) in steps"
-            :key="index"
-            :stepNumber="index + 1"
-            :description="stepDescriptions[index]"
-            :isActive="activeStep === index + 1"
-            :completed="step.completed"
-            @toggle="handleStepToggle"
-            @height-change="handleHeightChange(index, $event)"
+              v-for="(step, index) in steps"
+              :key="index"
+              :stepNumber="index + 1"
+              :description="stepDescriptions[index]"
+              :isActive="activeStep === index + 1"
+              :completed="step.completed"
+              @toggle="handleStepToggle"
+              @height-change="handleHeightChange(index, $event)"
           >
             <div v-if="activeStep === index + 1">
               <div v-if="index === 0">
@@ -40,10 +40,9 @@
           </StepCard>
         </div>
       </div>
-      <InfoBanner text="После того, как вы смогли добавить ваше подключение, вы можете вернуться
-      сюда и ознакомиться с вашим личным кабинетом"/>
+      <InfoBanner class="info-banner" text="После того, как вы смогли добавить ваше подключение, вы можете вернуться сюда и ознакомиться с вашим личным кабинетом" />
     </div>
-    <DashboardButton />
+    <DashboardButton class="dashboard-button" />
   </div>
 </template>
 
@@ -142,8 +141,11 @@ export default defineComponent({
 }
 
 .scrollable-content {
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   padding-bottom: 20px;
+  flex: 1;
 }
 
 .setup-title {
@@ -158,6 +160,7 @@ export default defineComponent({
   flex: 1;
   display: flex;
   gap: 16px;
+  margin-bottom: 40px;
 }
 
 .steps-container {
@@ -229,5 +232,14 @@ export default defineComponent({
 
 .rule-text {
   text-align: left;
+}
+
+.info-banner {
+  margin-top: auto;
+}
+
+.dashboard-button {
+  flex-shrink: 0;
+  margin-top: auto;
 }
 </style>
