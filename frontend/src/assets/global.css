@@ -1,0 +1,26 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f5f5f5;
+  box-sizing: border-box;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+/* 
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px;
+} */

@@ -1,0 +1,97 @@
+<template>
+  <div class="referral-user-card">
+    <div class="user-info">
+      <div class="avatar-container">
+        <img
+          v-if="user.avatar"
+          :src="user.avatar"
+          alt="User avatar"
+          class="user-avatar"
+        />
+        <SvgIcon
+          v-else
+          :iconName="'user-default-icon'"
+          class="user-default-icon"
+        />
+      </div>
+      <div class="username">{{ user.username }}</div>
+    </div>
+    <div class="bonus-text">+2 недели</div>
+  </div>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue';
+import SvgIcon from './SvgIcon.vue';
+
+export default defineComponent({
+  name: 'ReferralUser',
+  components: {
+    SvgIcon,
+  },
+  props: {
+    user: {
+      type: Object,
+      required: true,
+    },
+  },
+});
+</script>
+
+<style scoped>
+.referral-user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.avatar-container {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 8px;
+  flex-shrink: 0;
+  background-color: #c1c1c1;
+}
+
+.user-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-default-icon {
+  width: 50%;
+  height: 50%;
+  padding: 25%;
+  object-fit: cover;
+  color: white;
+}
+
+.username {
+  color: #121212;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.bonus-text {
+  color: #121212;
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+</style>

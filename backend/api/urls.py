@@ -5,6 +5,7 @@ from .views import (
     ReferralViewSet, CouponViewSet, CouponUsageViewSet, NotificationViewSet
 )
 
+
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'connections', ConnectionViewSet)
