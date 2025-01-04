@@ -8,8 +8,8 @@
             class="user-default-icon"
         />
         <img
-            v-show="user.avatar && imageLoaded"
-            :src="user.avatar"
+            v-show="avatarUrl && imageLoaded"
+            :src="avatarUrl"
             alt="User avatar"
             class="user-avatar"
             @load="handleImageLoad"
@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, onMounted } from 'vue';
 import SvgIcon from './SvgIcon.vue';
 
 export default defineComponent({
@@ -38,6 +38,16 @@ export default defineComponent({
   },
   setup(props) {
     const imageLoaded = ref(false);
+    const avatarUrl = ref('');
+
+    onMounted(async () => {
+      if (typeof props.user.avatar === 'function') {
+        const url = await props.user.avatar();
+        if (url) {
+          avatarUrl.value = url;
+        }
+      }
+    });
 
     const handleImageLoad = () => {
       imageLoaded.value = true;
@@ -45,6 +55,7 @@ export default defineComponent({
 
     return {
       imageLoaded,
+      avatarUrl,
       handleImageLoad,
     };
   },
