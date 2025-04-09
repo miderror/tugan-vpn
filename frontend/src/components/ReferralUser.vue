@@ -17,7 +17,7 @@
       </div>
       <div class="username">{{ user.username }}</div>
     </div>
-    <div class="bonus-text">+2 недели</div>
+    <div class="bonus-text">+100₽</div>
   </div>
 </template>
 
@@ -112,10 +112,14 @@ export default defineComponent({
 }
 
 .bonus-text {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-style: normal;
   color: #121212;
   font-weight: 600;
   font-size: 16px;
   flex-shrink: 0;
   margin-left: 8px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 </style>

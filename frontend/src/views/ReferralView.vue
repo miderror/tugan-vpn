@@ -4,14 +4,14 @@
     <div class="scrollable-content">
       <h1 class="referral-title">Реферальная<br>программа</h1>
       <div class="stats-container">
-        <StatsBox label="Ваш реферальный баланс:" :value="referralBalance" />
+        <StatsBox label="Ваш реферальный баланс:" :value="`${referralBalance}₽`" />
         <StatsBox label="Ваши рефералы:" :value="referralCount" />
       </div>
       <ReferralLink :referralLink="referralLink" />
       <div class="referral-list">
         <ReferralUser v-for="user in referralUsers" :key="user.id" :user="user" />
       </div>
-      <InfoBanner class="info-banner" text="С каждого вашего реферала вы будете получать дополнительные 2 недели доступа" />
+      <InfoBanner class="info-banner" text="С каждого приведённого друга вы будете получать 100₽ на баланс" />
     </div>
     <DashboardButton class="dashboard-button" />
   </div>
@@ -19,7 +19,6 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { fetchReferralData, getTelegramUserAvatar } from '@/api';
 import { useTwaSdk } from '@/composables/useTwaSdk';
 import StatsBox from '@/components/StatsBox.vue';
@@ -40,12 +39,11 @@ export default defineComponent({
     BackButton,
   },
   setup() {
-    const router = useRouter();
     const { getUserData } = useTwaSdk();
-    const referralBalance = ref(100);
+    const referralBalance = ref(0);
     const referralCount = ref(0);
     const referralLink = ref('https://t.me/your_referral_link');
-    const referralUsers = ref([]);
+    const referralUsers = ref<{ id: number; username: string; avatar: () => Promise<string | null> }[]>([]);
 
     onMounted(async () => {
       const userData = getUserData();
@@ -56,13 +54,14 @@ export default defineComponent({
       }
 
       try {
-        const referralData = await fetchReferralData();
+        const referralData = await fetchReferralData() as { id: number; username: string }[];
         referralUsers.value = referralData.map(user => ({
           id: user.id,
           username: user.username,
           avatar: getTelegramUserAvatar(user.id),
         }));
         referralCount.value = referralData.length;
+        referralBalance.value = referralData.length * 100;
       } catch (error) {}
     });
 
@@ -97,7 +96,11 @@ export default defineComponent({
 }
 
 .info-banner {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-style: normal;
   margin-top: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .referral-title {

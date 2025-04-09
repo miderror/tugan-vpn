@@ -8,6 +8,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
+import { useTwaSdk } from '@/composables/useTwaSdk';
 import SvgIcon from './SvgIcon.vue';
 
 export default defineComponent({
@@ -16,9 +17,11 @@ export default defineComponent({
     SvgIcon,
   },
   setup() {
+    const { hapticFeedback } = useTwaSdk();
     const router = useRouter();
 
     const goToHome = () => {
+      hapticFeedback('success');
       router.push({ name: 'home' });
     };
 

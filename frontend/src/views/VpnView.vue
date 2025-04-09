@@ -49,6 +49,9 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
+import { useTwaSdk } from '@/composables/useTwaSdk';
+import { fetchVpnConfig } from '@/api';
+import { useNotification } from '@/composables/useNotification';
 import Stepper from '@/components/Stepper.vue';
 import StepCard from '@/components/StepCard.vue';
 import SvgIcon from '@/components/SvgIcon.vue';
@@ -67,6 +70,12 @@ export default defineComponent({
     BackButton,
   },
   setup() {
+    const {
+      openDownloadPageFromSdk, openSubscriptionLink, openRulesetLink,
+      copyToClipboard, hapticFeedback
+    } = useTwaSdk();
+    const { notify } = useNotification();
+
     const steps = ref([
       { active: true, completed: false },
       { active: false, completed: false },
@@ -99,19 +108,86 @@ export default defineComponent({
     };
 
     const openDownloadPage = (): void => {
-      console.log('Скачивание приложения...');
+      hapticFeedback('success');
+      openDownloadPageFromSdk();
     };
 
+    // const handleConnect = async (): Promise<void> => {
+    //   try {
+    //     const response = await fetchVpnConfig();
+    //     if (response.vpn_url) {
+    //       const fullUrl = `${import.meta.env.VITE_API_URL}${response.vpn_url}`;
+    //       openSubscriptionLink(fullUrl);
+    //     }
+    //   } catch (error) {}
+    // };
+    
     const handleConnect = (): void => {
-      console.log('Подключение к VPN...');
+      hapticFeedback('success');
+      console.log("Fetching VPN config...");
+      fetchVpnConfig()
+        .then((response) => {
+          console.log("VPN config fetched:", response);
+          if (response.vpn_url) {
+            const fullUrl = `${import.meta.env.VITE_API_URL}${response.vpn_url}`;
+            console.log("Opening subscription link:", fullUrl);
+            setTimeout(() => {
+              openSubscriptionLink(fullUrl);
+            }, 0);
+            notify({ message: 'Конфигурация загружена', type: 'info' });
+          } else {
+            notify({ message: 'Ошибка: URL не найден', type: 'error' });
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch VPN config:", error);
+          notify({ message: 'Ошибка загрузки конфигурации', type: 'error' });
+        });
     };
+
+    // const handleCopyConfig = async (): Promise<void> => {
+    //   try {
+    //     const response = await fetchVpnConfig();
+    //     if (response.vpn_url) {
+    //       const fullUrl = `${import.meta.env.VITE_API_URL}${response.vpn_url}`;
+    //       copyToClipboard(fullUrl);
+    //     }
+    //     notify({ message: 'Скопировано', type: 'info' });
+    //   } catch (error) {}
+    // };
 
     const handleCopyConfig = (): void => {
-      console.log('Копирование конфигурации...');
+      hapticFeedback('success');
+      console.log("Fetching VPN config...");
+      fetchVpnConfig()
+        .then((response) => {
+          console.log("VPN config fetched:", response);
+          if (response.vpn_url) {
+            const fullUrl = `${import.meta.env.VITE_API_URL}${response.vpn_url}`;
+            console.log("Copying to clipboard:", fullUrl);
+            setTimeout(() => {
+              try {
+                copyToClipboard(fullUrl);
+                notify({ message: 'Скопировано', type: 'info' });
+              } catch (error) {
+                console.error("Failed to copy to clipboard:", error);
+                notify({ message: 'Ошибка копирования', type: 'error' });
+              }
+            }, 0);
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch VPN config:", error);
+          notify({ message: 'Ошибка загрузки конфигурации', type: 'error' });
+        });
     };
 
     const handleAddRule = (): void => {
+      hapticFeedback('success');
       console.log('Добавление правила...');
+      const rulesetUrl = `${import.meta.env.VITE_API_URL}/ruleset/`;
+      // const rulesetUrl = 'https://stridently-virtuous-squirrelfish.cloudpub.ru:443/ruleset.json';
+      openRulesetLink(rulesetUrl);
     };
 
 

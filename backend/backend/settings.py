@@ -5,9 +5,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config.DJANGO_SECRET
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['portar.org', 'localhost', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://portar.org']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -65,6 +66,26 @@ DATABASES = {
 }
 
 TELEGRAM_SECRET_KEY = config.TELEGRAM_SECRET_KEY
+ADMIN_IDS = config.ADMIN_IDS
+
+XUI_CLUSTERS = config.XUI_CLUSTERS
+XUI_ADMIN_USERNAME = config.XUI_ADMIN_USERNAME
+XUI_ADMIN_PASSWORD = config.XUI_ADMIN_PASSWORD
+
+TOTAL_GB = config.TOTAL_GB
+TRIAL_TIME = config.TRIAL_TIME
+
+YOOKASSA_SHOP_ID = config.YOOKASSA_SHOP_ID
+YOOKASSA_SECRET_KEY = config.YOOKASSA_SECRET_KEY
+WEBAPP_URL = config.WEBAPP_URL
+
+WEBHOOK_HOST = config.WEBHOOK_HOST
+WEBHOOK_PATH = config.WEBHOOK_PATH
+WEBHOOK_PORT = config.WEBAPP_PORT
+WEBHOOK_URL = config.WEBHOOK_URL
+
+SUB_PATH = config.SUB_PATH
+PUBLIC_LINK = config.PUBLIC_LINK
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -93,5 +114,6 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = '/var/www/tgwebapp/backend/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

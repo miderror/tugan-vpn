@@ -7,11 +7,17 @@
           <div class="welcome-text">Привет, {{ user.first_name }}</div>
           <SvgIcon :iconName="'user-icon'" class="user-icon" />
         </div>
+
+        <div class="ip-box">
+          <StatsBox label="Ваш IP:" :value="userIp" />
+        </div>
+
         <div class="stats-container">
           <StatsBox label="Использовано:" :value="usage" />
           <StatsBox label="Подписка до:" :value="subscriptionDate" />
         </div>
       </div>
+
       <div class="buttons-container">
         <div class="action-buttons">
           <ActionButton
@@ -44,6 +50,7 @@
             iconName="trial-access-icon"
             altText="Trial Access Icon"
             text="Получить доступ на 7 дней"
+            @click="claimGiftHandler"
           />
         </div>
       </div>
@@ -55,7 +62,8 @@
 import { defineComponent, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTwaSdk } from '@/composables/useTwaSdk';
-import { handleReferral } from '@/api';
+import { claimGift, fetchCurrentUser, getUserIp } from '@/api';
+import { useNotification } from '@/composables/useNotification';
 import StatsBox from '@/components/StatsBox.vue';
 import ActionButton from '@/components/ActionButton.vue';
 import PromoButton from '@/components/PromoButton.vue';
@@ -71,48 +79,82 @@ export default defineComponent({
   },
   setup() {
     const router = useRouter();
-    const { openSupportChat, getUserData, getReferrerId } = useTwaSdk();
+    const { openSupportChat, getUserData, getStartParam, hapticFeedback } = useTwaSdk();
+    const { notify } = useNotification();
 
     const user = ref<{ first_name?: string }>({ first_name: 'user' });
-    const usage = ref('36.02/500.0 GB');
-    const subscriptionDate = ref('17.12.2025');
-
+    const usage = ref('');
+    const subscriptionDate = ref('');
+    const canClaimGift = ref(false);
+    const userIp = ref('');
+    
     onMounted(async () => {
       const userData = getUserData();
       if (userData?.first_name) {
         user.value.first_name = userData.first_name;
       }
 
-      const referrerId = getReferrerId();
-      if (referrerId) {
-        await handleReferral(referrerId);
-  }
+      try {
+        const startParam = getStartParam();
+        if (startParam === 'subscription' && !sessionStorage.getItem('startParamHandled')) {
+          sessionStorage.setItem('startParamHandled', 'true')
+          router.push({ name: 'subscription' });
+          return;
+        }
+        const currentUserData = await fetchCurrentUser(startParam);
+        if (currentUserData) {
+          usage.value = currentUserData.usage;
+          subscriptionDate.value = currentUserData.subscriptionDate;
+          canClaimGift.value = currentUserData.can_claim_gift;
+        }
+
+        const ipResponse = await getUserIp();
+        if (ipResponse.ip) {
+          userIp.value = ipResponse.ip;
+        }
+      } catch (error) {}
     });
 
     const goToVpn = () => {
+      hapticFeedback('success');
       router.push({ name: 'vpn' });
     };
 
     const goToSubscription = () => {
+      hapticFeedback('success');
       router.push({ name: 'subscription' });
     };
 
     const goToReferral = () => {
+      hapticFeedback('success');
       router.push({ name: 'referral' });
     };
 
     const openSupport = () => {
+      hapticFeedback('success');
       openSupportChat();
+    };
+
+    const claimGiftHandler = async () => {
+      hapticFeedback('error');
+      notify({ message: 'Уже воспользовались подарком', type: 'error' });
+      if (!canClaimGift.value) { return; }
+      try {
+        const response = await claimGift();
+        canClaimGift.value = false;
+      } catch (error) {}
     };
 
     return {
       user,
       usage,
       subscriptionDate,
+      userIp,
       goToVpn,
       goToSubscription,
       goToReferral,
       openSupport,
+      claimGiftHandler,
     };
   },
 });
@@ -122,13 +164,25 @@ export default defineComponent({
 .dashboard-card {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   height: 100vh;
   max-width: 400px;
   width: 100%;
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
+  overflow-y: auto;
+  position: relative;
+}
+
+.dashboard-card::after {
+  content: '';
+  display: block;
+  height: 50px;
+  position: absolute;
+  bottom: -50px;
+  left: 0;
+  right: 0;
+  z-index: -1;
 }
 
 .dashboard-content {
@@ -139,8 +193,8 @@ export default defineComponent({
 }
 
 .logo {
-  width: 240px;
-  height: 114px;
+  width: 190px;
+  height: 120px;
   align-self: center;
   margin-bottom: 10px;
 }
@@ -174,16 +228,26 @@ export default defineComponent({
   flex-shrink: 0;
 }
 
+.ip-box {
+  width: 100%;
+  margin-bottom: 40px;
+  max-height: 50px;
+}
+
+.ip-box .stats-box {
+  padding: 12px;
+}
+
 .stats-container {
   display: flex;
   gap: 8px;
   width: 100%;
-  flex-shrink: 1;
+  margin-top: auto;
 }
 
 .stats-container .stats-box {
+  flex: 1;
   height: auto;
-  gap: 5px;
 }
 
 .buttons-container {

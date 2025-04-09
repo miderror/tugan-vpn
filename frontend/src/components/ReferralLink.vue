@@ -22,6 +22,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { useTwaSdk } from '@/composables/useTwaSdk';
+import { useNotification } from '@/composables/useNotification';
 import SvgIcon from '@/components/SvgIcon.vue';
 
 export default defineComponent({
@@ -36,13 +37,17 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const { copyToClipboard, shareMessage } = useTwaSdk();
+    const { copyToClipboard, shareMessage, hapticFeedback } = useTwaSdk();
+    const { notify } = useNotification();
 
     const copyLink = () => {
+      hapticFeedback('success');
       copyToClipboard(props.referralLink);
+      notify({ message: 'Скопировано', type: 'info' });
     };
 
     const shareLink = () => {
+      hapticFeedback('success');
       shareMessage(props.referralLink);
     };
 

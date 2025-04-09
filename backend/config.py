@@ -1,3 +1,4 @@
+import json
 from dotenv import load_dotenv
 import os
 
@@ -14,3 +15,23 @@ CHANNELS_REDIS_PORT = os.getenv("CHANNELS_REDIS_PORT")
 
 DJANGO_SECRET = os.getenv("DJANGO_SECRET")
 TELEGRAM_SECRET_KEY = os.getenv("TELEGRAM_SECRET_KEY")
+ADMIN_IDS = json.loads(os.getenv("ADMIN_IDS", "[]"))
+
+XUI_CLUSTERS = json.loads(os.getenv("XUI_CLUSTERS"))
+XUI_ADMIN_USERNAME = os.getenv("XUI_ADMIN_USERNAME")
+XUI_ADMIN_PASSWORD = os.getenv("XUI_ADMIN_PASSWORD")
+
+TOTAL_GB = int(os.getenv("TOTAL_GB"))
+TRIAL_TIME = int(os.getenv("TRIAL_TIME"))
+
+YOOKASSA_SHOP_ID = os.getenv("YOOKASSA_SHOP_ID")
+YOOKASSA_SECRET_KEY = os.getenv("YOOKASSA_SECRET_KEY")
+WEBAPP_URL = os.getenv("WEBAPP_URL")
+
+WEBHOOK_HOST = os.getenv("WEBHOOK_HOST")
+WEBAPP_PORT = os.getenv("WEBAPP_PORT")
+WEBHOOK_PATH = os.getenv("WEBHOOK_PATH")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+
+SUB_PATH = os.getenv("SUB_PATH")
+PUBLIC_LINK = f"{WEBHOOK_HOST}{SUB_PATH}"

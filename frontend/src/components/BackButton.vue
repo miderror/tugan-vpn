@@ -7,13 +7,16 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
+import { useTwaSdk } from '@/composables/useTwaSdk';
 
 export default defineComponent({
   name: 'BackButton',
   setup() {
+    const { hapticFeedback } = useTwaSdk();
     const router = useRouter();
 
     const goToHome = () => {
+      hapticFeedback('success');
       router.push({ name: 'home' });
     };
 
