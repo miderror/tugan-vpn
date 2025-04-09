@@ -1,3 +1,5 @@
+from datetime import datetime
+import uuid
 from django.db import models
 
 
@@ -10,9 +12,10 @@ class User(models.Model):
     is_bot = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    utm_source = models.CharField(max_length=64, null=True, blank=True)
 
     def __str__(self):
-        return f"User {self.tg_id}"
+        return f"User {self.tg_id} ({self.username})"
 
 
 class Connection(models.Model):
@@ -25,47 +28,69 @@ class Connection(models.Model):
 
 
 class Payment(models.Model):
-    tg_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.FloatField()
     payment_system = models.CharField(max_length=255)
     status = models.CharField(default='success', max_length=255)
+    payment_id = models.CharField(max_length=255, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Payment {self.id} for {self.tg_id.username}"
+        return f"Payment {self.id} for {self.user.username} ({self.user.username})"
 
 
 class Key(models.Model):
-    tg_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     client_id = models.CharField(max_length=255)
-    email = models.EmailField()
-    created_at = models.BigIntegerField()
+    email = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     expiry_time = models.BigIntegerField()
-    key = models.TextField()
-    server_id = models.CharField(max_length=255, default='cluster1')
-    notified = models.BooleanField(default=False)
-    notified_24h = models.BooleanField(default=False)
+    sub_id = models.CharField(max_length=255, unique=True)
+    total_bytes = models.BigIntegerField(default=107374182400)
+    used_bytes = models.BigIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    access_token = models.CharField(max_length=255, unique=True)
+    can_claim_gift = models.BooleanField(default=True)
+    tried_to_connect = models.BooleanField(default=False)
+    next_reset_date = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"Key for {self.tg_id.username}"
+        return f"Key for {self.user.tg_id} ({self.user.username})"
+    
+    @property
+    def total_gb(self):
+        value = self.total_bytes / (1024 ** 3)
+        return f"{value:.1f}"
+
+    @property
+    def used_gb(self):
+        value = self.used_bytes / (1024 ** 3)
+        return f"{value:.1f}"
+
+    @property
+    def expiry_date(self):
+        return datetime.fromtimestamp(self.expiry_time / 1000).strftime("%d.%m.%Y")
 
 
 class Referral(models.Model):
-    referred_tg_id = models.OneToOneField(
+    referred_user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         primary_key=True,
-        related_name='referred_user'
+        related_name='referred_tg_user'
     )
-    referrer_tg_id = models.ForeignKey(
+    referrer_user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='referrer_user'
+        related_name='referrer_tg_user'
     )
     reward_issued = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Referral {self.referred_tg_id.tg_id} by {self.referrer_tg_id.tg_id}"
+        return (
+            f"Referral {self.referred_user.tg_id} by {self.referrer_user.tg_id} "
+            f"({self.referred_user.username} by {self.referrer_user.username})"
+        )
 
 class Coupon(models.Model):
     code = models.CharField(max_length=255, unique=True)
@@ -97,3 +122,14 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.tg_id} - {self.notification_type}"
+
+class Tariff(models.Model):
+    duration = models.CharField(max_length=50)
+    price = models.FloatField()
+    total = models.FloatField()
+    original_price = models.FloatField(null=True, blank=True)
+    is_bestseller = models.BooleanField(default=False)
+    period_days = models.IntegerField()
+
+    def __str__(self):
+        return f"Tariff {self.duration} (₽{self.total})"

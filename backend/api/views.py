@@ -1,21 +1,28 @@
 import requests
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .models import User, Connection, Payment, Key, Referral, Coupon, CouponUsage, Notification
+from .models import User, Referral, Tariff
 from .serializers import (
-    UserSerializer, ConnectionSerializer, PaymentSerializer, KeySerializer,
-    ReferralSerializer, CouponSerializer, CouponUsageSerializer, NotificationSerializer
+    UserSerializer,
+    ReferralSerializer,
+    TariffSerializer
 )
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_object(self, pk):
+        try:
+            return User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise Http404
 
     @action(detail=False, methods=['get'])
     def current_user(self, request):
@@ -28,7 +35,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def avatar(self, request, pk=None):
-        user = self.get_object()
+        user = self.get_object(pk)
+        print(user.tg_id)
         bot_token = settings.TELEGRAM_SECRET_KEY
         try:
             photos_response = requests.get(
@@ -63,64 +71,26 @@ class UserViewSet(viewsets.ModelViewSet):
             return response
 
 
-class ConnectionViewSet(viewsets.ModelViewSet):
-    queryset = Connection.objects.all()
-    serializer_class = ConnectionSerializer
-
-
-class PaymentViewSet(viewsets.ModelViewSet):
-    queryset = Payment.objects.all()
-    serializer_class = PaymentSerializer
-
-
-class KeyViewSet(viewsets.ModelViewSet):
-    queryset = Key.objects.all()
-    serializer_class = KeySerializer
-
-
-class ReferralViewSet(viewsets.ModelViewSet):
+class ReferralViewSet(viewsets.ViewSet):
     queryset = Referral.objects.all()
     serializer_class = ReferralSerializer
 
     @action(detail=False, methods=['get'])
     def get_referrals(self, request):
         current_user = request.tg_user
-        referrals = Referral.objects.filter(referrer_tg_id=current_user)
+        referrals = Referral.objects.filter(referrer_user=current_user)
 
         referral_data = []
         for referral in referrals:
-            referred_user = referral.referred_tg_id
+            referred_user = referral.referred_user
             referral_data.append({
                 'id': referred_user.tg_id,
                 'username': referred_user.username,
-                'avatar': '',
             })
 
         return Response(referral_data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['post'])
-    def handle_referral(self, request):
-        current_user = request.tg_user
-        referral = Referral.objects.filter(referred_tg_id=current_user).first()
-        if not referral:
-            return Response({"message": "No referrer found for this user"}, status=status.HTTP_404_NOT_FOUND)
 
-        if referral.reward_issued:
-            return Response({"message": "Reward already issued"}, status=status.HTTP_200_OK)
-
-        return Response({"message": "Referral handled successfully, reward not yet issued"}, status=status.HTTP_200_OK)
-
-
-class CouponViewSet(viewsets.ModelViewSet):
-    queryset = Coupon.objects.all()
-    serializer_class = CouponSerializer
-
-
-class CouponUsageViewSet(viewsets.ModelViewSet):
-    queryset = CouponUsage.objects.all()
-    serializer_class = CouponUsageSerializer
-
-
-class NotificationViewSet(viewsets.ModelViewSet):
-    queryset = Notification.objects.all()
-    serializer_class = NotificationSerializer
+class TariffViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Tariff.objects.all()
+    serializer_class = TariffSerializer

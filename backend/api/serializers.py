@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Connection, Payment, Key, Referral, Coupon, CouponUsage, Notification
+from .models import User, Connection, Payment, Key, Referral, Coupon, CouponUsage, Notification, Tariff
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -47,4 +47,9 @@ class CouponUsageSerializer(serializers.ModelSerializer):
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
+        fields = '__all__'
+
+class TariffSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tariff
         fields = '__all__'
