@@ -150,9 +150,9 @@ async def create_client(tg_id, days, total_bytes, is_active):
         next_reset_date=next_reset_date,
     )
     
-    for cluster_name, cluster in settings.XUI_CLUSTERS.items():
-        for server_name, server_config in cluster.items():
-            try:
+    try:
+        for cluster_name, cluster in settings.XUI_CLUSTERS.items():
+            for server_name, server_config in cluster.items():
                 xui = AsyncApi(
                     server_config['API_URL'],
                     username=settings.XUI_ADMIN_USERNAME,
@@ -173,8 +173,9 @@ async def create_client(tg_id, days, total_bytes, is_active):
                 )
 
                 await xui.client.add(server_config['INBOUND_ID'], [client])
-            except Exception as e:
-                print(f"Ошибка при создании клиента на сервере {server_name} (кластер {cluster_name}): {e}")
+    except Exception as e:
+        print(f"Ошибка при создании клиента на серверах: {e}")
+        raise e
 
 async def extend_access(tg_id, days, total_bytes):
     try:
@@ -219,14 +220,12 @@ async def extend_access(tg_id, days, total_bytes):
             except Exception as e:
                 print(f"Ошибка при обновлении клиента на сервере {server_name} (кластер {cluster_name}): {e}")
 
-    old_expiry_time = key.expiry_time
     key.expiry_time = new_expiry_time
     key.total_bytes = total_bytes
     key.is_active = True
     await key.asave()
 
-    if old_expiry_time < now:
-        await reset_traffic(key)
+    await reset_traffic(key)
 
     await sync_to_async(Notification.objects.filter(
         tg_id=user.tg_id,

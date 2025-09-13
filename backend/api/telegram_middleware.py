@@ -1,5 +1,6 @@
 import re
 from django.conf import settings
+from django.db import transaction
 from api.models import User, Connection, Referral
 from rest_framework import status
 from django.http import JsonResponse
@@ -41,23 +42,28 @@ class TWAAuthorizationMiddleware:
         print("user:", user)
         current_user = User.objects.filter(tg_id=user.id).first()
         if not current_user:
-            current_user = User.objects.create(
-                tg_id=user.id,
-                username=user.username,
-                first_name=user.first_name,
-                last_name=user.last_name,
-                language_code=user.language_code,
-                is_bot=False
-            )
+            try:
+                with transaction.atomic():
+                    current_user = User.objects.create(
+                        tg_id=user.id,
+                        username=user.username,
+                        first_name=user.first_name,
+                        last_name=user.last_name,
+                        language_code=user.language_code,
+                        is_bot=False
+                    )
 
-            connection = Connection.objects.create(tg_id=current_user)
-            request.connection = connection
+                    connection = Connection.objects.create(tg_id=current_user)
+                    request.connection = connection
+                    
+                    async_to_sync(xui.create_client)(
+                        current_user.tg_id, days=7, total_bytes=int(settings.TOTAL_GB * 1024 * 1024 * 1024), is_active=True
+                    )
+                    print("создан клиент")
+            except Exception as e:
+                print("ошибка при созданиии клиента:", e)
+                return JsonResponse({"error": "Failed to initialize user profile. Please try again later."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
-            async_to_sync(xui.create_client)(
-                current_user.tg_id, days=7, total_bytes=int(settings.TOTAL_GB * 1024 * 1024 * 1024), is_active=True
-            )
-
-            print("создан клиент")
             start_param = self._get_start_param(request)
             print("проверка start_param")
             if start_param:
