@@ -11,6 +11,7 @@ from ..models import Tariff, Payment, User
 from asgiref.sync import sync_to_async
 from ninja import Schema
 from bot.services.notification_service import send_payment_success_notification, send_admin_payment_notification
+from django.db import transaction
 
 Configuration.account_id = settings.YOOKASSA_SHOP_ID
 Configuration.secret_key = settings.YOOKASSA_SECRET_KEY
@@ -28,6 +29,7 @@ class CreatePaymentSchema(Schema):
 
 router = Router()
 
+@transaction.atomic
 @router.post("/webhook/")
 async def yookassa_webhook(request):
     try:
