@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
     "django_celery_beat",
     "backend.users.apps.UsersConfig",
     "backend.vpn.apps.VpnConfig",
@@ -87,6 +88,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "backend.users.authentication.TWAAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+}
 
 LANGUAGE_CODE = "en-us"
 
@@ -99,10 +108,7 @@ USE_TZ = True
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 4000
 
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "static"
-STATICFILES_DIRS = [
-    BASE_DIR / "staticfiles",
-]
+STATIC_ROOT = BASE_DIR / "static_root"
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -115,6 +121,7 @@ REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = os.getenv("REDIS_PORT", "6379")
 REDIS_DB_CELERY = os.environ.get("REDIS_DB_CELERY", "0")
 REDIS_DB_FSM = os.environ.get("REDIS_DB_FSM", "1")
+REDIS_DB_CACHE = os.environ.get("REDIS_DB_CELERY", "2")
 
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_CELERY}"
 CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_CELERY}"
@@ -124,10 +131,12 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+DJANGO_CACHE_LOCATION = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_CACHE}"
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": CELERY_RESULT_BACKEND,
+        "LOCATION": DJANGO_CACHE_LOCATION,
     }
 }
 

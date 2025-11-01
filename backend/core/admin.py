@@ -24,16 +24,17 @@ class MyAdminSite(admin.AdminSite):
                 None,
             )
 
-            if "label" in app_config:
-                app["name"] = app_config["label"]
+            if app_config:
+                if "label" in app_config:
+                    app["name"] = app_config["label"]
 
-            if app_config and "models" in app_config:
-                model_order = {
-                    model_name: i for i, model_name in enumerate(app_config["models"])
-                }
-                app["models"].sort(
-                    key=lambda x: model_order.get(f"{x['object_name'].lower()}", 999)
-                )
+                if "models" in app_config:
+                    model_order = {
+                        model_name: i for i, model_name in enumerate(app_config["models"])
+                    }
+                    app["models"].sort(
+                        key=lambda x: model_order.get(f"{x['object_name'].lower()}", 999)
+                    )
 
         return app_list
 

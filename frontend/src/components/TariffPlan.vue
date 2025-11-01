@@ -5,12 +5,12 @@
   >
     <div class="plan-details">
       <div class="plan-duration">{{ duration }}</div>
-      <div class="plan-price">{{ price }}₽ / день</div>
+      <div class="plan-price">{{ pricePerDay }}₽ / день</div>
       <div class="plan-total-wrapper">
         <div class="plan-total">Общая сумма {{ total }}₽</div>
         <div v-if="originalPrice" class="original-price">
-            {{ originalPrice }}₽
-            <SvgIcon :iconName="'strike-line'" class="strike-line" />
+          {{ originalPrice }}₽
+          <SvgIcon :iconName="'strike-line'" class="strike-line" />
         </div>
       </div>
     </div>
@@ -23,11 +23,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import SvgIcon from './SvgIcon.vue';
+import { defineComponent } from "vue";
+import SvgIcon from "./SvgIcon.vue";
 
 export default defineComponent({
-  name: 'TariffPlan',
+  name: "TariffPlan",
   components: {
     SvgIcon,
   },
@@ -36,7 +36,7 @@ export default defineComponent({
       type: String,
       required: true,
     },
-    price: {
+    pricePerDay: {
       type: Number,
       required: true,
     },
@@ -57,9 +57,10 @@ export default defineComponent({
       default: false,
     },
   },
+  emits: ["select-plan"],
   methods: {
     selectPlan() {
-      this.$emit('select-plan');
+      this.$emit("select-plan");
     },
   },
 });
@@ -100,7 +101,8 @@ export default defineComponent({
 }
 
 .plan-price {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   font-style: normal;
   font-weight: 600;
   font-size: 20px;
@@ -112,7 +114,8 @@ export default defineComponent({
 }
 
 .plan-total {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   font-style: normal;
   font-weight: 600;
   font-size: 14px;
@@ -131,7 +134,8 @@ export default defineComponent({
 }
 
 .original-price {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   font-style: normal;
   color: #ff0000;
   font-weight: 400;
@@ -156,7 +160,7 @@ export default defineComponent({
   height: 24px;
   color: #8d8c8f;
   align-self: flex-start;
-  padding-top: 4px;;
+  padding-top: 4px;
 }
 
 .bestseller-badge {

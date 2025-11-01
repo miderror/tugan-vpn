@@ -4,12 +4,12 @@ from datetime import timedelta
 from django.db import models
 from django.utils import timezone
 
-from backend.users.models import User
-
 
 class Tariff(models.Model):
-    name = models.CharField(
-        max_length=100, verbose_name="Название тарифа (для админки)"
+    display_name = models.CharField(
+        max_length=100,
+        verbose_name="Название для фронтенда",
+        help_text="Например: 1 месяц",
     )
     duration_days = models.PositiveIntegerField(verbose_name="Длительность (дни)")
     price = models.DecimalField(
@@ -27,7 +27,7 @@ class Tariff(models.Model):
     )
 
     def __str__(self):
-        return f"{self.name} ({self.duration_days} дней за {self.price} руб)"
+        return self.display_name
 
     class Meta:
         verbose_name = "Тариф"
@@ -37,7 +37,7 @@ class Tariff(models.Model):
 
 class Subscription(models.Model):
     user = models.OneToOneField(
-        User,
+        "users.User",
         on_delete=models.CASCADE,
         related_name="subscription",
         verbose_name="Пользователь",
@@ -46,13 +46,13 @@ class Subscription(models.Model):
     vless_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     trial_activated = models.BooleanField(
-        default=False, verbose_name="Триал активирован"
+        default=False, verbose_name="Пробный период активирован (кнопка '7 дней')"
     )
 
-    total_paid = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0, verbose_name="Всего пополнено"
+    has_ever_connected = models.BooleanField(
+        default=False, verbose_name="Пытался подключиться хотя бы раз"
     )
-
+    
     is_vpn_client_active = models.BooleanField(
         default=False, verbose_name="Клиент VPN активен в 3x-ui"
     )

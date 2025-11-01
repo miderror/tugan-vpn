@@ -8,6 +8,7 @@ docker-compose.yml
 docker/
 Dockerfile*
 Makefile
+justfile
 
 # Environments
 .env

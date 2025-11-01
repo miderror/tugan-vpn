@@ -7,11 +7,11 @@
         v-for="plan in plans"
         :key="plan.id"
         :duration="plan.duration"
-        :price="plan.price"
+        :price-per-day="plan.pricePerDay"
         :total="plan.total"
-        :originalPrice="plan.original_price"
-        :isBestseller="plan.is_bestseller"
-        :isSelected="selectedPlanId === plan.id"
+        :original-price="plan.originalPrice"
+        :is-bestseller="plan.isBestseller"
+        :is-selected="selectedPlanId === plan.id"
         @select-plan="selectPlan(plan.id)"
       />
       <div class="payment-section">
@@ -39,13 +39,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
-import { useTwaSdk } from '@/composables/useTwaSdk';
-import { fetchTariffs, createPayment } from '@/api';
-import { useNotification } from '@/composables/useNotification';
-import TariffPlan from '@/components/TariffPlan.vue';
-import DashboardButton from '@/components/DashboardButton.vue';
-import BackButton from '@/components/BackButton.vue';
+import { defineComponent, ref, onMounted } from "vue";
+import { useTwaSdk } from "@/composables/useTwaSdk";
+import { fetchTariffs, createPayment } from "@/api";
+import { useNotification } from "@/composables/useNotification";
+import TariffPlan from "@/components/TariffPlan.vue";
+import DashboardButton from "@/components/DashboardButton.vue";
+import BackButton from "@/components/BackButton.vue";
+import type { Tariff } from "@/types";
 
 interface TariffPlan {
   id: number;
@@ -57,7 +58,7 @@ interface TariffPlan {
 }
 
 export default defineComponent({
-  name: 'SubscriptionView',
+  name: "SubscriptionView",
   components: {
     TariffPlan,
     DashboardButton,
@@ -69,13 +70,12 @@ export default defineComponent({
 
     const selectedPlanId = ref<number | null>();
 
-    const plans = ref<TariffPlan[]>([]);
-    const email = ref<string>('');
-    
+    const plans = ref<Tariff[]>([]);
+    const email = ref<string>("");
+
     onMounted(async () => {
       try {
-        const tariffs = await fetchTariffs();
-        plans.value = tariffs;
+        plans.value = await fetchTariffs();
       } catch (error) {}
     });
 
@@ -100,18 +100,18 @@ export default defineComponent({
 
     const handlePayment = async () => {
       if (!selectedPlanId.value) {
-        hapticFeedback('error');
-        notify({ message: 'Выберите тарифный план', type: 'error' });
+        hapticFeedback("error");
+        notify({ message: "Выберите тарифный план", type: "error" });
         return;
       }
 
       if (!email.value || !validateEmail(email.value)) {
-        hapticFeedback('error');
-        notify({ message: 'Введите корректный email', type: 'error' });
+        hapticFeedback("error");
+        notify({ message: "Введите корректный email", type: "error" });
         return;
       }
 
-      hapticFeedback('success');
+      hapticFeedback("success");
       try {
         const payment = await createPayment(selectedPlanId.value, email.value);
 
@@ -119,7 +119,7 @@ export default defineComponent({
           openExternalLink(payment.payment_url);
         }
       } catch (error) {
-        notify({ message: 'Ошибка при создании платежа', type: 'error' });
+        notify({ message: "Ошибка при создании платежа", type: "error" });
       }
     };
 

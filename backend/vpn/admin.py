@@ -6,14 +6,14 @@ from .models import Subscription, Tariff, VpnServer
 @admin.register(Tariff)
 class TariffAdmin(admin.ModelAdmin):
     list_display = (
-        "name",
+        "display_name",
         "duration_days",
         "price",
         "is_active",
         "order",
         "is_bestseller",
     )
-    list_editable = ("is_active", "order", "price", "is_bestseller")
+    list_editable = ("is_active", "order", "is_bestseller")
     list_filter = ("is_active",)
 
 

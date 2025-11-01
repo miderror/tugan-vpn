@@ -7,7 +7,7 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(config => {
   const { initData } = WebApp;
-  initData && (config.headers['Authorization'] = initData);
+  initData && (config.headers['Telegram-Init-Data'] = initData);
   return config;
 });
 
