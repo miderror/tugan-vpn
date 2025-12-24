@@ -59,18 +59,18 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useTwaSdk } from '@/composables/useTwaSdk';
-import { claimGift, fetchCurrentUser, getUserIp } from '@/api';
-import { useNotification } from '@/composables/useNotification';
-import StatsBox from '@/components/StatsBox.vue';
-import ActionButton from '@/components/ActionButton.vue';
-import PromoButton from '@/components/PromoButton.vue';
-import SvgIcon from '@/components/SvgIcon.vue';
+import { defineComponent, ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useTwaSdk } from "@/composables/useTwaSdk";
+import { claimGift, fetchCurrentUser } from "@/api";
+import { useNotification } from "@/composables/useNotification";
+import StatsBox from "@/components/StatsBox.vue";
+import ActionButton from "@/components/ActionButton.vue";
+import PromoButton from "@/components/PromoButton.vue";
+import SvgIcon from "@/components/SvgIcon.vue";
 
 export default defineComponent({
-  name: 'HomeView',
+  name: "HomeView",
   components: {
     StatsBox,
     ActionButton,
@@ -79,15 +79,16 @@ export default defineComponent({
   },
   setup() {
     const router = useRouter();
-    const { openSupportChat, getUserData, getStartParam, hapticFeedback } = useTwaSdk();
+    const { openSupportChat, getUserData, getStartParam, hapticFeedback } =
+      useTwaSdk();
     const { notify } = useNotification();
 
-    const user = ref<{ first_name?: string }>({ first_name: 'user' });
-    const usage = ref('');
-    const subscriptionDate = ref('');
+    const user = ref<{ first_name?: string }>({ first_name: "user" });
+    const usage = ref("");
+    const subscriptionDate = ref("");
     const canClaimGift = ref(false);
-    const userIp = ref('');
-    
+    const userIp = ref("");
+
     onMounted(async () => {
       const userData = getUserData();
       if (userData?.first_name) {
@@ -95,50 +96,51 @@ export default defineComponent({
       }
 
       try {
-        const startParam = getStartParam();
-        if (startParam === 'subscription' && !sessionStorage.getItem('startParamHandled')) {
-          sessionStorage.setItem('startParamHandled', 'true')
-          router.push({ name: 'subscription' });
-          return;
-        }
-        const currentUserData = await fetchCurrentUser(startParam);
-        if (currentUserData) {
-          usage.value = currentUserData.usage;
-          subscriptionDate.value = currentUserData.subscriptionDate;
-          canClaimGift.value = currentUserData.can_claim_gift;
-        }
+        const userData = await fetchCurrentUser();
+        usage.value = userData.usage;
+        subscriptionDate.value = userData.subscription_date;
+        canClaimGift.value = userData.can_claim_gift;
+        userIp.value = userData.ip;
 
-        const ipResponse = await getUserIp();
-        if (ipResponse.ip) {
-          userIp.value = ipResponse.ip;
+        const startParam = getStartParam();
+        if (
+          startParam === "subscription" &&
+          !sessionStorage.getItem("startParamHandled")
+        ) {
+          sessionStorage.setItem("startParamHandled", "true");
+          router.push({ name: "subscription" });
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error("Failed to load user info", error);
+      }
     });
 
     const goToVpn = () => {
-      hapticFeedback('success');
-      router.push({ name: 'vpn' });
+      hapticFeedback("success");
+      router.push({ name: "vpn" });
     };
 
     const goToSubscription = () => {
-      hapticFeedback('success');
-      router.push({ name: 'subscription' });
+      hapticFeedback("success");
+      router.push({ name: "subscription" });
     };
 
     const goToReferral = () => {
-      hapticFeedback('success');
-      router.push({ name: 'referral' });
+      hapticFeedback("success");
+      router.push({ name: "referral" });
     };
 
     const openSupport = () => {
-      hapticFeedback('success');
+      hapticFeedback("success");
       openSupportChat();
     };
 
     const claimGiftHandler = async () => {
-      hapticFeedback('error');
-      notify({ message: 'Уже воспользовались подарком', type: 'error' });
-      if (!canClaimGift.value) { return; }
+      hapticFeedback("error");
+      notify({ message: "Уже воспользовались подарком", type: "error" });
+      if (!canClaimGift.value) {
+        return;
+      }
       try {
         const response = await claimGift();
         canClaimGift.value = false;
@@ -175,7 +177,7 @@ export default defineComponent({
 }
 
 .dashboard-card::after {
-  content: '';
+  content: "";
   display: block;
   height: 50px;
   position: absolute;
