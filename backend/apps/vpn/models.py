@@ -3,6 +3,7 @@ import secrets
 import uuid
 
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django_jsonform.models.fields import JSONField
 
@@ -113,6 +114,13 @@ class Subscription(models.Model):
     def _generate_access_token(self):
         unique_data = f"{self.user.telegram_id}{secrets.token_hex(16)}{timezone.now().timestamp()}"
         return hashlib.sha256(unique_data.encode()).hexdigest()
+
+    def get_subscription_url(self):
+        return reverse("subscription-file", args=[self.access_token])
+
+    @property
+    def vless_link(self):
+        return self.get_subscription_url()
 
     @property
     def is_active(self):

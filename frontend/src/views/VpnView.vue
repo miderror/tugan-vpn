@@ -2,19 +2,23 @@
   <div class="vpn-view">
     <BackButton />
     <div class="scrollable-content">
-      <h1 class="setup-title">Быстрая настройка<br>VPN-сервиса</h1>
+      <h1 class="setup-title">Быстрая настройка<br />VPN-сервиса</h1>
       <div class="content-container">
-        <Stepper :steps="steps" :dividerHeights="dividerHeights" :activeStep="activeStep" />
+        <Stepper
+          :steps="steps"
+          :dividerHeights="dividerHeights"
+          :activeStep="activeStep"
+        />
         <div class="steps-container">
           <StepCard
-              v-for="(step, index) in steps"
-              :key="index"
-              :stepNumber="index + 1"
-              :description="stepDescriptions[index]"
-              :isActive="activeStep === index + 1"
-              :completed="step.completed"
-              @toggle="handleStepToggle"
-              @height-change="handleHeightChange(index, $event)"
+            v-for="(step, index) in steps"
+            :key="index"
+            :stepNumber="index + 1"
+            :description="stepDescriptions[index]"
+            :isActive="activeStep === index + 1"
+            :completed="step.completed"
+            @toggle="handleStepToggle"
+            @height-change="handleHeightChange(index, $event)"
           >
             <div v-if="activeStep === index + 1">
               <div v-if="index === 0">
@@ -24,43 +28,53 @@
                 </button>
               </div>
               <div v-if="index === 1" class="step-buttons-container">
-                <button class="primary-button" @click.stop="handleConnect">Подключиться</button>
+                <button class="primary-button" @click.stop="handleConnect">
+                  Подключиться
+                </button>
                 <span class="divider-text">или</span>
-                <button class="secondary-button" @click.stop="handleCopyConfig">Скопировать конфиг</button>
+                <button class="secondary-button" @click.stop="handleCopyConfig">
+                  Скопировать конфиг
+                </button>
               </div>
               <div v-if="index === 2">
                 <p class="step-description">
-                  При добавлении роутинга, сайты внутри страны будут открываться без VPN
+                  При добавлении роутинга, сайты внутри страны будут открываться
+                  без VPN
                 </p>
                 <button class="primary-button" @click.stop="handleAddRule">
                   <SvgIcon :iconName="'russia-flag-icon'" class="flag-icon" />
-                  <span class="rule-text">Добавить правило: Сайты РФ напрямую</span>
+                  <span class="rule-text"
+                    >Добавить правило: Сайты РФ напрямую</span
+                  >
                 </button>
               </div>
             </div>
           </StepCard>
         </div>
       </div>
-      <InfoBanner class="info-banner" text="После того, как вы смогли добавить ваше подключение, вы можете вернуться сюда и ознакомиться с вашим личным кабинетом" />
+      <InfoBanner
+        class="info-banner"
+        text="После того, как вы смогли добавить ваше подключение, вы можете вернуться сюда и ознакомиться с вашим личным кабинетом"
+      />
     </div>
     <DashboardButton class="dashboard-button" />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
-import { useTwaSdk } from '@/composables/useTwaSdk';
-import { fetchVpnConfig } from '@/api';
-import { useNotification } from '@/composables/useNotification';
-import Stepper from '@/components/Stepper.vue';
-import StepCard from '@/components/StepCard.vue';
-import SvgIcon from '@/components/SvgIcon.vue';
-import InfoBanner from '@/components/InfoBanner.vue';
-import DashboardButton from '@/components/DashboardButton.vue';
-import BackButton from '@/components/BackButton.vue';
+import { defineComponent, ref, onMounted } from "vue";
+import { useTwaSdk } from "@/composables/useTwaSdk";
+import { useNotification } from "@/composables/useNotification";
+import { useUserStore } from "@/composables/useUserStore";
+import Stepper from "@/components/Stepper.vue";
+import StepCard from "@/components/StepCard.vue";
+import SvgIcon from "@/components/SvgIcon.vue";
+import InfoBanner from "@/components/InfoBanner.vue";
+import DashboardButton from "@/components/DashboardButton.vue";
+import BackButton from "@/components/BackButton.vue";
 
 export default defineComponent({
-  name: 'VpnView',
+  name: "VpnView",
   components: {
     Stepper,
     StepCard,
@@ -71,10 +85,14 @@ export default defineComponent({
   },
   setup() {
     const {
-      openDownloadPageFromSdk, openSubscriptionLink, openRulesetLink,
-      copyToClipboard, hapticFeedback
+      openDownloadPageFromSdk,
+      openSubscriptionLink,
+      openRulesetLink,
+      copyToClipboard,
+      hapticFeedback,
     } = useTwaSdk();
     const { notify } = useNotification();
+    const { user, loadUser } = useUserStore();
 
     const steps = ref([
       { active: true, completed: false },
@@ -83,9 +101,9 @@ export default defineComponent({
     ]);
 
     const stepDescriptions = [
-      'Установить мобильное приложение',
-      'Подключиться к VPN',
-      'Добавить роутинг',
+      "Установить мобильное приложение",
+      "Подключиться к VPN",
+      "Добавить роутинг",
     ];
 
     const activeStep = ref(1);
@@ -104,92 +122,55 @@ export default defineComponent({
       const circleHeight = 32;
       const gapHeight = 40;
       const dividerVerticalMargin = 16;
-      dividerHeights.value[index] = height + gapHeight - circleHeight - dividerVerticalMargin;
+      dividerHeights.value[index] =
+        height + gapHeight - circleHeight - dividerVerticalMargin;
     };
 
+    onMounted(() => {
+      if (!user.value.vpn_url) {
+        loadUser();
+      }
+    });
+
     const openDownloadPage = (): void => {
-      hapticFeedback('success');
+      hapticFeedback("success");
       openDownloadPageFromSdk();
     };
 
-    // const handleConnect = async (): Promise<void> => {
-    //   try {
-    //     const response = await fetchVpnConfig();
-    //     if (response.vpn_url) {
-    //       const fullUrl = `${import.meta.env.VITE_API_URL}${response.vpn_url}`;
-    //       openSubscriptionLink(fullUrl);
-    //     }
-    //   } catch (error) {}
-    // };
-    
     const handleConnect = (): void => {
-      hapticFeedback('success');
-      console.log("Fetching VPN config...");
-      fetchVpnConfig()
-        .then((response) => {
-          console.log("VPN config fetched:", response);
-          if (response.vpn_url) {
-            const fullUrl = `${import.meta.env.VITE_API_URL}${response.vpn_url}`;
-            console.log("Opening subscription link:", fullUrl);
-            setTimeout(() => {
-              openSubscriptionLink(fullUrl);
-            }, 0);
-            notify({ message: 'Конфигурация загружена', type: 'info' });
-          } else {
-            notify({ message: 'Ошибка: URL не найден', type: 'error' });
-          }
-        })
-        .catch((error) => {
-          console.error("Failed to fetch VPN config:", error);
-          notify({ message: 'Ошибка загрузки конфигурации', type: 'error' });
-        });
+      hapticFeedback("success");
+      const vpnUrl = user.value.vpn_url;
+
+      if (vpnUrl) {
+        const fullUrl = `${import.meta.env.VITE_API_URL}${vpnUrl}`;
+        console.log("Opening subscription link:", fullUrl);
+        openSubscriptionLink(fullUrl);
+      } else {
+        notify({ message: "Подписка не найдена", type: "error" });
+      }
     };
 
-    // const handleCopyConfig = async (): Promise<void> => {
-    //   try {
-    //     const response = await fetchVpnConfig();
-    //     if (response.vpn_url) {
-    //       const fullUrl = `${import.meta.env.VITE_API_URL}${response.vpn_url}`;
-    //       copyToClipboard(fullUrl);
-    //     }
-    //     notify({ message: 'Скопировано', type: 'info' });
-    //   } catch (error) {}
-    // };
-
     const handleCopyConfig = (): void => {
-      hapticFeedback('success');
-      console.log("Fetching VPN config...");
-      fetchVpnConfig()
-        .then((response) => {
-          console.log("VPN config fetched:", response);
-          if (response.vpn_url) {
-            const fullUrl = `${import.meta.env.VITE_API_URL}${response.vpn_url}`;
-            console.log("Copying to clipboard:", fullUrl);
-            setTimeout(() => {
-              try {
-                copyToClipboard(fullUrl);
-                notify({ message: 'Скопировано', type: 'info' });
-              } catch (error) {
-                console.error("Failed to copy to clipboard:", error);
-                notify({ message: 'Ошибка копирования', type: 'error' });
-              }
-            }, 0);
-          }
-        })
-        .catch((error) => {
-          console.error("Failed to fetch VPN config:", error);
-          notify({ message: 'Ошибка загрузки конфигурации', type: 'error' });
-        });
+      hapticFeedback("success");
+      const vpnUrl = user.value.vpn_url;
+
+      if (vpnUrl) {
+        const fullUrl = `${import.meta.env.VITE_API_URL}${vpnUrl}`;
+        try {
+          copyToClipboard(fullUrl);
+          notify({ message: "Скопировано", type: "info" });
+        } catch (error) {
+          notify({ message: "Ошибка копирования", type: "error" });
+        }
+      } else {
+        notify({ message: "Конфиг недоступен", type: "error" });
+      }
     };
 
     const handleAddRule = (): void => {
-      hapticFeedback('success');
-      console.log('Добавление правила...');
-      const rulesetUrl = `${import.meta.env.VITE_API_URL}/ruleset/`;
-      // const rulesetUrl = 'https://stridently-virtuous-squirrelfish.cloudpub.ru:443/ruleset.json';
-      openRulesetLink(rulesetUrl);
+      hapticFeedback("success");
+      openRulesetLink();
     };
-
 
     return {
       steps,

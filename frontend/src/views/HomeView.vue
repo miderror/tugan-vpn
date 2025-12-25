@@ -9,12 +9,12 @@
         </div>
 
         <div class="ip-box">
-          <StatsBox label="Ваш IP:" :value="userIp" />
+          <StatsBox label="Ваш IP:" :value="user.ip" />
         </div>
 
         <div class="stats-container">
-          <StatsBox label="Использовано:" :value="usage" />
-          <StatsBox label="Подписка до:" :value="subscriptionDate" />
+          <StatsBox label="Использовано:" :value="user.usage" />
+          <StatsBox label="Подписка до:" :value="user.subscription_date" />
         </div>
       </div>
 
@@ -59,11 +59,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+import { defineComponent, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useTwaSdk } from "@/composables/useTwaSdk";
-import { claimGift, fetchCurrentUser } from "@/api";
+import { claimGift } from "@/api";
 import { useNotification } from "@/composables/useNotification";
+import { useUserStore } from "@/composables/useUserStore";
 import StatsBox from "@/components/StatsBox.vue";
 import ActionButton from "@/components/ActionButton.vue";
 import PromoButton from "@/components/PromoButton.vue";
@@ -79,39 +80,20 @@ export default defineComponent({
   },
   setup() {
     const router = useRouter();
-    const { openSupportChat, getUserData, getStartParam, hapticFeedback } =
-      useTwaSdk();
+    const { openSupportChat, getStartParam, hapticFeedback } = useTwaSdk();
     const { notify } = useNotification();
-
-    const user = ref<{ first_name?: string }>({ first_name: "user" });
-    const usage = ref("");
-    const subscriptionDate = ref("");
-    const canClaimGift = ref(false);
-    const userIp = ref("");
+    const { user, loadUser } = useUserStore();
 
     onMounted(async () => {
-      const userData = getUserData();
-      if (userData?.first_name) {
-        user.value.first_name = userData.first_name;
-      }
+      await loadUser();
 
-      try {
-        const userData = await fetchCurrentUser();
-        usage.value = userData.usage;
-        subscriptionDate.value = userData.subscription_date;
-        canClaimGift.value = userData.can_claim_gift;
-        userIp.value = userData.ip;
-
-        const startParam = getStartParam();
-        if (
-          startParam === "subscription" &&
-          !sessionStorage.getItem("startParamHandled")
-        ) {
-          sessionStorage.setItem("startParamHandled", "true");
-          router.push({ name: "subscription" });
-        }
-      } catch (error) {
-        console.error("Failed to load user info", error);
+      const startParam = getStartParam();
+      if (
+        startParam === "subscription" &&
+        !sessionStorage.getItem("startParamHandled")
+      ) {
+        sessionStorage.setItem("startParamHandled", "true");
+        router.push({ name: "subscription" });
       }
     });
 
@@ -138,20 +120,16 @@ export default defineComponent({
     const claimGiftHandler = async () => {
       hapticFeedback("error");
       notify({ message: "Уже воспользовались подарком", type: "error" });
-      if (!canClaimGift.value) {
-        return;
+      if (!user.value.can_claim_gift) {
+        user.value.can_claim_gift = false;
+        try {
+          await claimGift();
+        } catch (error) {}
       }
-      try {
-        const response = await claimGift();
-        canClaimGift.value = false;
-      } catch (error) {}
     };
 
     return {
       user,
-      usage,
-      subscriptionDate,
-      userIp,
       goToVpn,
       goToSubscription,
       goToReferral,

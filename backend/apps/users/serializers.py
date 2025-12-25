@@ -8,16 +8,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
     subscription_date = serializers.SerializerMethodField()
     can_claim_gift = serializers.SerializerMethodField()
     ip = serializers.SerializerMethodField()
+    vpn_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
             "telegram_id",
-            "first_name",
             "usage",
             "subscription_date",
             "can_claim_gift",
             "ip",
+            "vpn_url",
         )
 
     def get_usage(self, obj):
@@ -39,5 +40,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_ip(self, obj):
         request = self.context.get("request")
         if request:
-            return request.META.get("HTTP_X_REAL_IP") or request.META.get("REMOTE_ADDR")
+            x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+            if x_forwarded_for:
+                return x_forwarded_for.split(",")[0].strip()
+
         return "Unknown"
+
+    def get_vpn_url(self, obj):
+        sub = getattr(obj, "subscription", None)
+        if sub:
+            return sub.vless_link
+        return ""

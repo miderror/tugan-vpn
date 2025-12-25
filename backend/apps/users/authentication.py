@@ -27,8 +27,7 @@ class TWAAuthentication(BaseAuthentication):
         auth_header = request.headers.get("Telegram-Init-Data")
 
         if not auth_header:
-            logger.warning("TWA Auth header is missing for request")
-            raise AuthenticationFailed("Telegram-Init-Data header is missing.")
+            return None
 
         try:
             init_data = self.authenticator.validate(auth_header)
