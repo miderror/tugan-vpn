@@ -13,6 +13,7 @@ from apps.vpn.services import SubscriptionService
 
 from .models import User
 from .services import process_start_param
+from .tasks import update_user_avatar_task
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,9 @@ class TWAAuthentication(BaseAuthentication):
                 logger.info(f"New user created: {user}")
                 transaction.on_commit(
                     lambda: process_start_param(user, init_data.start_param)
+                )
+                transaction.on_commit(
+                    lambda: update_user_avatar_task.delay(user.telegram_id)
                 )
 
         return user, None

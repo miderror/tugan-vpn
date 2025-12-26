@@ -6,11 +6,6 @@ export const fetchCurrentUser = async () => {
 };
 
 export const claimGift = async () => {
-  const response = await apiClient.post("xui/claim_gift/");
-  return response.data;
-};
-
-export const fetchVpnConfig = async () => {
-  const response = await apiClient.get("/vpn/config/");
+  const response = await apiClient.post("vpn/claim-gift/");
   return response.data;
 };

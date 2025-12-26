@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
 
 export const fetchReferralData = async () => {
-  const response = await apiClient.get("/referrals/get_referrals/");
+  const response = await apiClient.get("/referrals/");
   return response.data;
 };

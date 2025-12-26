@@ -23,7 +23,7 @@ class TariffViewSet(viewsets.ReadOnlyModelViewSet):
 class VpnViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], url_path="claim-gift")
     def claim_gift(self, request):
         user = request.user
         if not hasattr(user, "subscription"):
@@ -34,7 +34,7 @@ class VpnViewSet(viewsets.ViewSet):
         sub = user.subscription
         if sub.trial_activated:
             return Response(
-                {"detail": "Gift already claimed"}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Gift already claimed"}, status=status.HTTP_409_CONFLICT
             )
 
         sub.trial_activated = True

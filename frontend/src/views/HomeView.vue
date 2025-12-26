@@ -120,7 +120,7 @@ export default defineComponent({
     const claimGiftHandler = async () => {
       hapticFeedback("error");
       notify({ message: "Уже воспользовались подарком", type: "error" });
-      if (!user.value.can_claim_gift) {
+      if (user.value.can_claim_gift) {
         user.value.can_claim_gift = false;
         try {
           await claimGift();
