@@ -183,3 +183,17 @@ class VpnServer(models.Model):
     class Meta:
         verbose_name = "VPN Сервер"
         verbose_name_plural = "VPN Серверы"
+
+
+class SubscriptionMode(models.TextChoices):
+    USER = "user", "Конкретному пользователю"
+    ACTIVE = "active", "Всем с активной подпиской"
+    INACTIVE = "inactive", "Всем с неактивной подпиской"
+    ALL = "all", "Вообще всем пользователям"
+
+
+class SubscriptionManagement(Subscription):
+    class Meta:
+        proxy = True
+        verbose_name = "Управление подписками"
+        verbose_name_plural = "Управление подписками"

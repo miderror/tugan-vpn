@@ -11,7 +11,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-      start_period: 10s
 
   redis:
     image: redis:7-alpine
@@ -26,7 +25,6 @@ services:
       interval: 1s
       timeout: 3s
       retries: 5
-      start_period: 5s
 
   backend:
     build:
@@ -55,7 +53,7 @@ services:
       dockerfile: Dockerfile
       target: dev
     container_name: tugan-celery-worker
-    command: celery -A config worker -l INFO
+    command: celery -A config worker -l INFO -Q default,background --concurrency=2
     volumes:
       - ../backend:/app
       - media-volume:/app/media

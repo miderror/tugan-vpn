@@ -132,6 +132,14 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_DEFAULT_QUEUE = "default"
+CELERY_TASK_ROUTES = {
+    "apps.vpn.tasks.send_notification_chunk_task": {"queue": "background"},
+    "apps.vpn.tasks.process_subscription_management_task": {"queue": "background"},
+    "*": {"queue": "default"},
+}
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_ACKS_LATE = True
 
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
