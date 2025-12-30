@@ -7,27 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django_jsonform.models.fields import JSONField
 
-SERVER_CREDENTIALS_SCHEMA = {
-    "type": "dict",
-    "keys": {
-        "api_url": {
-            "type": "string",
-            "title": "API URL (3X-UI)",
-            "required": True,
-            "help": "Пример: http://1.2.3.4:2053",
-        },
-        "username": {
-            "type": "string",
-            "title": "Логин",
-            "required": True,
-        },
-        "password": {
-            "type": "string",
-            "title": "Пароль",
-            "required": True,
-        },
-    },
-}
+from .constants import SERVER_CREDENTIALS_SCHEMA
 
 
 class Tariff(models.Model):
@@ -69,23 +49,21 @@ class Subscription(models.Model):
     )
     end_date = models.DateTimeField(verbose_name="Дата окончания")
 
+    vless_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     email = models.CharField(max_length=255, unique=True, editable=False)
     sub_id = models.CharField(max_length=255, unique=True, editable=False)
     access_token = models.CharField(
         max_length=255, unique=True, editable=False, db_index=True
     )
-    vless_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-
-    trial_activated = models.BooleanField(
-        default=False, verbose_name="Нажал кнопку с подарком"
-    )
-
-    has_ever_connected = models.BooleanField(
-        default=False, verbose_name="Пытался подключиться хотя бы раз"
-    )
 
     is_vpn_client_active = models.BooleanField(
         default=False, verbose_name="Клиент VPN активен в 3x-ui"
+    )
+    trial_activated = models.BooleanField(
+        default=False, verbose_name="Нажал кнопку с подарком"
+    )
+    has_ever_connected = models.BooleanField(
+        default=False, verbose_name="Пытался подключиться хотя бы раз"
     )
 
     total_bytes_limit = models.BigIntegerField(
@@ -100,31 +78,19 @@ class Subscription(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.email = self._generate_unique_email()
-            self.sub_id = self._generate_secure_sub_id()
-            self.access_token = self._generate_access_token()
+            self.email = f"{self.user.telegram_id}_{uuid.uuid4().hex}"
+            self.sub_id = f"{self.user.telegram_id}-{secrets.token_urlsafe(16)}"
+            raw_token = f"{self.user.telegram_id}{secrets.token_hex(16)}{timezone.now().timestamp()}"
+            self.access_token = hashlib.sha256(raw_token.encode()).hexdigest()
         super().save(*args, **kwargs)
-
-    def _generate_unique_email(self):
-        return f"{self.user.telegram_id}_{uuid.uuid4().hex}"
-
-    def _generate_secure_sub_id(self):
-        return f"{self.user.telegram_id}-{secrets.token_urlsafe(16)}"
-
-    def _generate_access_token(self):
-        unique_data = f"{self.user.telegram_id}{secrets.token_hex(16)}{timezone.now().timestamp()}"
-        return hashlib.sha256(unique_data.encode()).hexdigest()
-
-    def get_subscription_url(self):
-        return reverse("subscription-file", args=[self.access_token])
-
-    @property
-    def vless_link(self):
-        return self.get_subscription_url()
 
     @property
     def is_active(self):
         return self.end_date > timezone.now()
+
+    @property
+    def vless_link(self):
+        return reverse("subscription-file", args=[self.access_token])
 
     @property
     def used_gb(self):

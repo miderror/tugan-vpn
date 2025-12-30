@@ -1,12 +1,8 @@
-import uuid
-
 from django.contrib import admin, messages
 from django.shortcuts import redirect, render
-from django.utils.html import format_html
 
 from .forms import SubscriptionManagementForm
 from .models import Subscription, SubscriptionManagement, Tariff, VpnServer
-from .tasks import process_subscription_management_task
 
 
 @admin.register(Tariff)
@@ -79,23 +75,10 @@ class SubscriptionManagementAdmin(admin.ModelAdmin):
         if request.method == "POST":
             form = SubscriptionManagementForm(request.POST)
             if form.is_valid():
-                action_id = str(uuid.uuid4())
-
-                process_subscription_management_task.delay(
-                    action_id=action_id,
-                    mode=form.cleaned_data["mode"],
-                    days=form.cleaned_data["days"],
-                    user_id=form.cleaned_data["target_user"].telegram_id
-                    if form.cleaned_data["target_user"]
-                    else None,
-                    send_notification=form.cleaned_data["send_notification"],
-                    notification_text=form.cleaned_data["notification_text"],
-                )
-
                 self.message_user(
                     request,
-                    format_html(f"🚀 Задача успешно поставлена в очередь (ID: {action_id[:8]})"),
-                    messages.SUCCESS,
+                    "Функционал временно отключен для рефакторинга.",
+                    messages.WARNING,
                 )
                 return redirect(request.path)
         else:
