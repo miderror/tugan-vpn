@@ -24,8 +24,8 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "django_jsonform",
     "apps.users",
-    "apps.vpn",
-    "apps.payments",
+    "apps.access",
+    "apps.billing",
     "apps.referrals",
     "apps.notifications",
 ]
@@ -134,8 +134,8 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_DEFAULT_QUEUE = "default"
 CELERY_TASK_ROUTES = {
-    "apps.vpn.tasks.send_notification_chunk_task": {"queue": "background"},
-    "apps.vpn.tasks.process_subscription_management_task": {"queue": "background"},
+    "apps.access.tasks.send_notification_chunk_task": {"queue": "background"},
+    "apps.access.tasks.process_subscription_management_task": {"queue": "background"},
     "*": {"queue": "default"},
 }
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
@@ -156,9 +156,8 @@ ADMIN_SITE_TITLE = env("ADMIN_SITE_TITLE")
 ADMIN_INDEX_TITLE = env("ADMIN_INDEX_TITLE")
 ADMIN_REORDER = [
     {"label": "👥 Пользователи", "models": ["users"]},
-    {"label": "🛡️ VPN и Подписки", "models": ["vpn"]},
-    {"label": "💰 Платежи", "models": ["payments"]},
-    {"label": "🤝 Реферальная система", "models": ["referrals"]},
+    {"label": "🛡️ VPN и Подписки", "models": ["access"]},
+    {"label": "💰 Платежи", "models": ["billing"]},
     {"label": "🔔 Уведомления", "models": ["notifications"]},
     {"label": "⏱️ Планировщик", "models": ["django_celery_beat"]},
 ]

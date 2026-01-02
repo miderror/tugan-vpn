@@ -1,113 +1,85 @@
 import logging
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from py3xui import AsyncApi
 from py3xui import Client as XuiClientObj
 
-from .dtos import VpnClientConfig, XuiCredentials
-
 logger = logging.getLogger(__name__)
 
 
-class VpnAdapterError(Exception):
-    pass
-
-
-class AuthenticationError(VpnAdapterError):
-    pass
-
-
 class XuiAdapter:
-    def __init__(self, credentials: XuiCredentials):
-        self._creds = credentials
+    __slots__ = ("_url", "_username", "_password", "_api")
+
+    def __init__(self, url: str, username: str, password: str):
+        self._url = url
+        self._username = username
+        self._password = password
         self._api: Optional[AsyncApi] = None
 
     async def __aenter__(self):
+        self._api = AsyncApi(self._url, self._username, self._password)
         try:
-            self._api = AsyncApi(
-                self._creds.url, self._creds.username, self._creds.password
-            )
             await self._api.login()
-            return self
         except Exception as e:
-            logger.error(f"XUI Login failed for {self._creds.url}: {e}")
-            raise AuthenticationError(f"Login failed: {e}")
+            logger.error(f"XUI Login failed: {self._url} - {e}")
+            raise ConnectionError(f"VPN Login failed: {e}")
+        return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         pass
-        
-    def _to_xui_client(self, config: VpnClientConfig) -> XuiClientObj:
-        return XuiClientObj(
-            id=str(config.vless_uuid),
-            email=config.email,
-            enable=config.enable,
-            totalGB=config.total_bytes,
-            expiryTime=config.expiry_time_ms,
-            subId=config.sub_id,
-            flow=config.flow,
-            limitIp=config.limit_ip,
-        )
 
-    async def upsert_client(self, inbound_id: int, config: VpnClientConfig) -> None:
+    async def update_client(self, inbound_id: int, client_data: Dict[str, Any]) -> None:
         if not self._api:
-            raise VpnAdapterError("Session not initialized")
+            raise ConnectionError("Session not initialized")
+
+        client = XuiClientObj(inboundId=inbound_id, **client_data)
 
         try:
-            xui_client = self._to_xui_client(config)
-            existing = await self._api.client.get_by_email(config.email)
-
-            if existing:
-                await self._api.client.update(existing.id, xui_client)
-                logger.debug(f"Updated client {config.email} on inbound {inbound_id}")
-            else:
-                await self._api.client.add(inbound_id, [xui_client])
-                logger.debug(f"Added client {config.email} to inbound {inbound_id}")
-
+            try:
+                await self._api.client.update(client.id, client)
+            except Exception:
+                await self._api.client.add(client.id, [client])
         except Exception as e:
-            logger.error(f"Upsert failed for {config.email}: {e}")
-            raise VpnAdapterError(f"Upsert error: {e}")
+            logger.error(
+                f"Failed to upsert client {client.email} on inbound {inbound_id}: {e}"
+            )
+            raise
 
-    async def bulk_overwrite_clients(
-        self, inbound_id: int, configs: List[VpnClientConfig]
+    async def bulk_overwrite(
+        self, inbound_id: int, clients_data: List[Dict[str, Any]]
     ) -> None:
         if not self._api:
-            raise VpnAdapterError("Session not initialized")
+            raise ConnectionError("Session not initialized")
 
         try:
             inbound = await self._api.inbound.get_by_id(inbound_id)
-            if not inbound or not inbound.settings:
-                raise VpnAdapterError(f"Inbound {inbound_id} not found or invalid")
+            inbound.settings.clients = [
+                XuiClientObj(inboundId=inbound_id, **c) for c in clients_data
+            ]
 
-            new_clients = [self._to_xui_client(c) for c in configs]
-
-            inbound.settings.clients = new_clients
             await self._api.inbound.update(inbound_id, inbound)
-            logger.info(
-                f"Bulk synced {len(new_clients)} clients to inbound {inbound_id}"
-            )
-
         except Exception as e:
-            logger.error(f"Bulk sync failed for inbound {inbound_id}: {e}")
-            raise VpnAdapterError(f"Bulk sync failed: {e}")
+            logger.error(f"Bulk overwrite failed on inbound {inbound_id}: {e}")
+            raise
 
-    async def get_inbound_stats(self, inbound_id: int) -> Dict[str, int]:
+    async def get_traffic_and_reset(self, inbound_id: int) -> Dict[str, int]:
         if not self._api:
-            raise VpnAdapterError("Session not initialized")
+            raise ConnectionError("Session not initialized")
 
         try:
             inbound = await self._api.inbound.get_by_id(inbound_id)
             stats = {}
-
             if inbound and inbound.clientStats:
-                for stat in inbound.clientStats:
-                    stats[stat.email] = stat.up + stat.down
+                stats = {
+                    s.email: (s.up + s.down)
+                    for s in inbound.clientStats
+                    if (s.up + s.down) > 0
+                }
 
-            logger.debug(
-                f"Retrieved traffic stats for {len(stats)} users on inbound {inbound_id}"
-            )
+            if stats:
+                await self._api.inbound.reset_client_stats(inbound_id)
 
             return stats
-
         except Exception as e:
-            logger.error(f"Failed to get stats for inbound {inbound_id}: {e}")
-            raise VpnAdapterError(f"Stats error: {e}")
+            logger.error(f"Traffic sync failed: {e}")
+            return {}

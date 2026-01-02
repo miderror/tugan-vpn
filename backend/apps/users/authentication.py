@@ -9,7 +9,7 @@ from rest_framework.request import Request
 from telegram_webapp_auth.auth import TelegramAuthenticator, generate_secret_key
 from telegram_webapp_auth.errors import InvalidInitDataError
 
-from apps.vpn.services import SubscriptionService
+from apps.access.services import SubscriptionService
 
 from .models import User
 from .services import process_start_param

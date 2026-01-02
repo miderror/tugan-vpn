@@ -1,6 +1,8 @@
 from django.contrib import admin, messages
 from django.shortcuts import redirect, render
 
+from apps.access.tasks import process_manual_extension_task
+
 from .forms import SubscriptionManagementForm
 from .models import Subscription, SubscriptionManagement, Tariff, VpnServer
 
@@ -75,11 +77,17 @@ class SubscriptionManagementAdmin(admin.ModelAdmin):
         if request.method == "POST":
             form = SubscriptionManagementForm(request.POST)
             if form.is_valid():
-                self.message_user(
-                    request,
-                    "Функционал временно отключен для рефакторинга.",
-                    messages.WARNING,
+                data = form.cleaned_data
+                uid = data["target_user"].telegram_id if data["target_user"] else None
+
+                process_manual_extension_task.delay(
+                    mode=data["mode"],
+                    days=data["days"],
+                    target_user_id=uid,
+                    send_notification=data["send_notification"],
+                    notification_text=data.get("notification_text", ""),
                 )
+                self.message_user(request, "Задача запущена.", messages.SUCCESS)
                 return redirect(request.path)
         else:
             form = SubscriptionManagementForm()

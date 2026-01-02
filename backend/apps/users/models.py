@@ -35,6 +35,9 @@ class User(models.Model):
         related_name="referrals",
         verbose_name="Кто пригласил",
     )
+    referral_bonus_awarded_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="Дата начисления бонуса за приглашение"
+    )
 
     avatar = models.ImageField(
         upload_to="avatars/", null=True, blank=True, verbose_name="Кэшированный аватар"

@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 
 from apps.users.models import User
-from apps.vpn.models import Subscription, SubscriptionMode
+from apps.access.models import Subscription, SubscriptionMode
 
 
 class SubscriptionManagementForm(forms.Form):

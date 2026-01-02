@@ -38,7 +38,7 @@ class SentNotification(models.Model):
     )
 
     def __str__(self):
-        return f"Уведомление для {self.user} по правилу '{self.rule.name}'"
+        return f"Log: {self.user} - {self.rule.name}"
 
     class Meta:
         verbose_name = "Отправленное уведомление"
