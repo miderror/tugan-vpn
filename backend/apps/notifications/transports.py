@@ -71,7 +71,7 @@ class TelegramTransport:
         return False
 
     async def _send_batch_async(self, chat_ids: List[int], text: str) -> int:
-        semaphore = asyncio.Semaphore(25)
+        semaphore = asyncio.Semaphore(20)
         success_count = 0
 
         async def worker(chat_id):
