@@ -1,5 +1,6 @@
 import logging
 import uuid
+from decimal import Decimal
 from typing import Dict, Optional
 
 from django.conf import settings
@@ -31,7 +32,7 @@ class YookassaGateway(BaseGateway):
 
     def create_payment(
         self,
-        amount: float,
+        amount: Decimal,
         currency: str,
         return_url: str,
         description: str,

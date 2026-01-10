@@ -1,5 +1,6 @@
 import logging
 
+from core.event_bus.publisher import publish
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
@@ -9,6 +10,7 @@ from apps.access.services.subscription import SubscriptionService
 from apps.notifications.services.dispatcher import NotificationDispatcher
 from apps.users.models import User
 
+from .events import PaymentSucceeded
 from .gateways import GatewayError, PaymentGatewayFactory
 from .models import Payment
 
@@ -125,15 +127,14 @@ class BillingService:
                 f"Revenue: {payment.amount} {payment.currency}. User: {payment.user_id}"
             )
 
-            SubscriptionService.extend_subscriptions(
-                days=payment.tariff.duration_days,
-                mode="user",
-                user_ids=[payment.user.telegram_id],
+            event = PaymentSucceeded(
+                user_id=payment.user.telegram_id,
+                amount=float(payment.amount),
+                currency=payment.currency,
+                tariff_days=payment.tariff.duration_days,
+                tariff_name=payment.tariff.display_name,
+                payment_id=str(payment.id),
             )
+            publish(event)
 
-            transaction.on_commit(
-                lambda: NotificationDispatcher().send_transactional(
-                    payment.user.telegram_id,
-                    f"✅ Оплата прошла успешно! Ваша подписка продлена на {payment.tariff.display_name}.",
-                )
-            )
+            logger.info(f"Payment processed: {payment.id}")

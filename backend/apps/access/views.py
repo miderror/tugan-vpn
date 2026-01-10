@@ -53,7 +53,9 @@ class SubscriptionFileView(views.APIView):
             sub.has_ever_connected = True
             sub.save(update_fields=["has_ever_connected"])
 
-        active_servers = VpnServer.objects.filter(is_active=True)
+        active_servers = VpnServer.objects.filter(is_active=True).only(
+            "config_template"
+        )
         configs = []
 
         for server in active_servers:

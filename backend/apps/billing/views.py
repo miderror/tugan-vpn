@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from django.http import HttpResponseServerError
 from rest_framework.views import APIView
 
 from .gateways import GatewayError

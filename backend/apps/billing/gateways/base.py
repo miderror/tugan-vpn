@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any, Dict, Optional
 
 
@@ -19,7 +20,7 @@ class BaseGateway(ABC):
     @abstractmethod
     def create_payment(
         self,
-        amount: float,
+        amount: Decimal,
         currency: str,
         return_url: str,
         description: str,
