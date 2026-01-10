@@ -6,8 +6,6 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.access.models import Tariff
-from apps.access.services.subscription import SubscriptionService
-from apps.notifications.services.dispatcher import NotificationDispatcher
 from apps.users.models import User
 
 from .events import PaymentSucceeded
