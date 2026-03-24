@@ -2,7 +2,7 @@ from pathlib import Path
 
 import environ
 
-env = environ.Env(DEBUG=(bool, False))
+env = environ.Env()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,24 +20,16 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
-    "django_celery_beat",
-    "django_jsonform",
-    "apps.users",
-    "apps.access",
-    "apps.billing",
-    "apps.referrals",
-    "apps.notifications",
 ]
 
-MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
+MIDDLEWARE = []
+
+ADMIN_MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -58,55 +50,39 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "config.wsgi.application"
-
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": env("POSTGRES_DB"),
         "USER": env("POSTGRES_USER"),
         "PASSWORD": env("POSTGRES_PASSWORD"),
-        "HOST": env("POSTGRES_HOST"),
+        "HOST": "postgres",
         "PORT": env("POSTGRES_PORT"),
-        "CONN_MAX_AGE": 60,
-        "CONN_HEALTH_CHECKS": True,
+        "CONN_MAX_AGE": 300,
+        "OPTIONS": {
+            "connect_timeout": 5,
+            "pool": {
+                "min_size": 1,
+                "max_size": 4,
+                "timeout": 10,
+            },
+        },
     }
 }
 
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
-]
-
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "apps.users.authentication.TWAAuthentication",
-    ],
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
-    ],
-}
+AUTH_PASSWORD_VALIDATORS = []
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Europe/Moscow"
 USE_I18N = True
 USE_TZ = True
 
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 4000
-
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "static_root"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -116,44 +92,13 @@ TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN")
 YOOKASSA_SHOP_ID = env("YOOKASSA_SHOP_ID")
 YOOKASSA_SECRET_KEY = env("YOOKASSA_SECRET_KEY")
 
-XUI_CLIENT_FLOW = "xtls-rprx-vision"
-XUI_CLIENT_LIMIT_IP = 1
-APP_PROFILE_TITLE = env("APP_PROFILE_TITLE")
-
 REDIS_HOST = env("REDIS_HOST")
 REDIS_PORT = env("REDIS_PORT")
-REDIS_DB_CELERY = env("REDIS_DB_CELERY", default="0")
-REDIS_DB_CACHE = env("REDIS_DB_CACHE", default="1")
-REDIS_DB_FSM = env("REDIS_DB_FSM", default="2")
+REDIS_DB_FSM = env("REDIS_DB_FSM")
 
-CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_CELERY}"
-CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_CELERY}"
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = TIME_ZONE
-CELERY_TASK_DEFAULT_QUEUE = "default"
-CELERY_TASK_ROUTES = {
-    "apps.access.tasks.send_notification_chunk_task": {"queue": "background"},
-    "apps.access.tasks.process_subscription_management_task": {"queue": "background"},
-    "*": {"queue": "default"},
-}
-CELERY_WORKER_PREFETCH_MULTIPLIER = 1
-CELERY_ACKS_LATE = True
-
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-
-DJANGO_CACHE_LOCATION = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_CACHE}"
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": DJANGO_CACHE_LOCATION,
-    }
-}
-
-ADMIN_SITE_HEADER = env("ADMIN_SITE_HEADER")
-ADMIN_SITE_TITLE = env("ADMIN_SITE_TITLE")
-ADMIN_INDEX_TITLE = env("ADMIN_INDEX_TITLE")
+ADMIN_SITE_HEADER = "Tugan VPN Admin"
+ADMIN_SITE_TITLE = "Панель управления"
+ADMIN_INDEX_TITLE = "Добро пожаловать"
 ADMIN_REORDER = [
     {"label": "👥 Пользователи", "models": ["users"]},
     {"label": "🛡️ VPN и Подписки", "models": ["access"]},
