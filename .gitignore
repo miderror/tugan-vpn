@@ -45,3 +45,5 @@ Thumbs.db
 media/
 static/
 3x-ui-cert/
+vpn-node/cert
+vpn-node/db
