@@ -8,13 +8,9 @@ class CustomAdminSite(admin.AdminSite):
     site_title = settings.ADMIN_SITE_TITLE
     index_title = settings.ADMIN_INDEX_TITLE
 
-    _cached_app_list = None
-
     def get_app_list(self, request, app_label=None):
-        if self._cached_app_list is not None:
-            return self._cached_app_list
-
         app_list = self._build_app_dict(request)
+
         if not hasattr(settings, "ADMIN_REORDER"):
             return sorted(app_list.values(), key=lambda x: x["name"].lower())
 
@@ -55,7 +51,6 @@ class CustomAdminSite(admin.AdminSite):
                     }
                 )
 
-        self._cached_app_list = final_app_list
         return final_app_list
 
 

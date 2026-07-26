@@ -1,9 +1,11 @@
 import orjson
 from django.http import HttpResponse
 
+R200 = HttpResponse(status=200)
 R204 = HttpResponse(status=204)
 R400 = HttpResponse(status=400)
 R401 = HttpResponse(status=401)
+R403 = HttpResponse(status=403)
 R404 = HttpResponse(status=404)
 R405 = HttpResponse(status=405)
 R500 = HttpResponse(status=500)

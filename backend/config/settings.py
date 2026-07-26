@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
-DEBUG = env("DEBUG")
+DEBUG = env.bool("DEBUG", default=False)
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
@@ -20,11 +20,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "apps.core",
 ]
 
-MIDDLEWARE = []
-
-ADMIN_MIDDLEWARE = [
+MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -41,7 +40,6 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
-                "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
@@ -56,21 +54,34 @@ DATABASES = {
         "NAME": env("POSTGRES_DB"),
         "USER": env("POSTGRES_USER"),
         "PASSWORD": env("POSTGRES_PASSWORD"),
-        "HOST": "postgres",
+        "HOST": env("POSTGRES_HOST"),
         "PORT": env("POSTGRES_PORT"),
-        "CONN_MAX_AGE": 300,
+        "CONN_MAX_AGE": 0,
         "OPTIONS": {
             "connect_timeout": 5,
             "pool": {
-                "min_size": 1,
-                "max_size": 4,
+                "min_size": 2,
+                "max_size": 15,
                 "timeout": 10,
             },
         },
     }
 }
 
-AUTH_PASSWORD_VALIDATORS = []
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+]
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Europe/Moscow"
@@ -100,9 +111,13 @@ ADMIN_SITE_HEADER = "Tugan VPN Admin"
 ADMIN_SITE_TITLE = "Панель управления"
 ADMIN_INDEX_TITLE = "Добро пожаловать"
 ADMIN_REORDER = [
-    {"label": "👥 Пользователи", "models": ["users"]},
-    {"label": "🛡️ VPN и Подписки", "models": ["access"]},
-    {"label": "💰 Платежи", "models": ["billing"]},
-    {"label": "🔔 Уведомления", "models": ["notifications"]},
-    {"label": "⏱️ Планировщик", "models": ["django_celery_beat"]},
+    {"label": "👥 Пользователи", "models": ["core.User"]},
+    {"label": "🎭 Персонажи", "models": ["core.Character"]},
+    {"label": "💬 Чаты и Сообщения", "models": ["core.Conversation", "core.Message"]},
+    {"label": "⚙️ Настройки LLM", "models": ["core.LLMConfiguration"]},
+    {"label": "💳 Платежи и Промокоды", "models": [
+        "core.Tariff", 
+        "core.Transaction", 
+        "core.Promocode"
+    ]},
 ]

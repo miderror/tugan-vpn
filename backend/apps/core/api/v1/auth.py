@@ -1,12 +1,12 @@
 import logging
 from functools import wraps
 
-from apps.core.models import User
+from config.utils import R401, R405, R500
 from django.conf import settings
 from telegram_webapp_auth import TelegramAuthenticator, generate_secret_key
 from telegram_webapp_auth.errors import InvalidInitDataError
 
-from .responses import R401, R405, R500
+from apps.core.models import User
 
 authenticator = TelegramAuthenticator(generate_secret_key(settings.BOT_TOKEN))
 logger = logging.getLogger(__name__)

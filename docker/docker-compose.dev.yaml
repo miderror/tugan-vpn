@@ -47,73 +47,20 @@ services:
       redis:
         condition: service_healthy
 
-  celery-worker:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
-      target: dev
-    container_name: tugan-celery-worker
-    command: celery -A config worker -l INFO -Q default,background --concurrency=2
-    volumes:
-      - ../backend:/app
-      - media-volume:/app/media
-    env_file:
-      - ../.env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  celery-beat:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
-      target: dev
-    container_name: tugan-celery-beat
-    command: celery -A config beat -l INFO
-    volumes:
-      - ../backend:/app
-    env_file:
-      - ../.env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  bot:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
-      target: dev
-    container_name: tugan-bot
-    command: python manage.py run_bot
-    volumes:
-      - ../backend:/app
-      - media-volume:/app/media
-    env_file:
-      - ../.env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-  
   frontend:
     build:
       context: ../frontend
       dockerfile: Dockerfile
-    container_name: tugan-frontend
+      target: dev
+    container_name: aichat-frontend
     command: sh -c "npm install && npm run dev -- --host"
     volumes:
       - ../frontend:/app
       - node-modules:/app/node_modules
-    working_dir: /app
     expose:
       - 5173
     env_file:
-      - ../.env
+      - ../frontend/.env
     depends_on:
       - backend
     stdin_open: true
@@ -121,18 +68,14 @@ services:
 
   nginx:
     image: nginx:1.27.5-alpine
-    container_name: tugan-nginx
+    container_name: aichat-nginx
     ports:
       - "80:80"
     volumes:
       - ./nginx/dev.conf:/etc/nginx/templates/default.conf.template:ro
       - static-volume:/app/backend/static_root:ro
       - media-volume:/app/backend/media:ro
-    env_file: ../.env
     environment:
-      NGINX_PORT: 80
-      BACKEND_PORT: 8000
-      FRONTEND_PORT: 5173
       ALLOWED_HOSTS: ${ALLOWED_HOSTS}
     depends_on:
       backend:

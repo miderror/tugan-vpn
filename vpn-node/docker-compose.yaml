@@ -1,8 +1,0 @@
-services:
-  3xui:
-    image: ghcr.io/mhsanaei/3x-ui:v2.8.11
-    volumes:
-      - ./db:/etc/x-ui/
-      - ./cert:/root/cert/
-    restart: unless-stopped
-    network_mode: host
