@@ -28,12 +28,6 @@ share/python-wheels/
 *.egg
 *.log
 
-# Django artifacts
-db.sqlite3
-db.sqlite3-journal
-*.mo
-*.pot
-
 # IDE
 .idea/
 .vscode/
@@ -44,6 +38,5 @@ Thumbs.db
 
 media/
 static/
-3x-ui-cert/
-vpn-node/cert
-vpn-node/db
+
+*.sql

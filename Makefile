@@ -5,7 +5,7 @@ COMPOSE_MAIN_DEV = docker/docker-compose.dev.yaml
 ENV_MAIN = .env
 
 DC_DEV = docker compose -f $(COMPOSE_MAIN_DEV) -p $(COMPOSE_PROJECT_NAME_DEV) --env-file $(ENV_MAIN)
-MANAGE_DEV = $(DC_DEV) exec backend python manage.py
+PICCOLO_DEV = $(DC_DEV) exec backend piccolo
 
 
 .PHONY: dev-build dev-up dev-down dev-stop dev-restart dev-logs dev-shell \
@@ -35,13 +35,13 @@ dev-shell:
 	$(DC_DEV) exec $(s) bash
 
 dev-makemigrations:
-	$(MANAGE_DEV) makemigrations $(args)
+	$(PICCOLO_DEV) migrations new db --auto
+
+dev-makemigrations-manual:
+	$(PICCOLO_DEV) migrations new db --desc="$(or $(desc),manual_migration)"
 
 dev-migrate:
-	$(MANAGE_DEV) migrate
+	$(PICCOLO_DEV) migrations forwards all
 
 dev-superuser:
-	$(MANAGE_DEV) createsuperuser
-
-dev-static:
-	$(MANAGE_DEV) collectstatic --noinput
+	$(PICCOLO_DEV) user create

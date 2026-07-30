@@ -8,6 +8,7 @@ import path from "path";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  const hosts = env.VITE_ALLOWED_HOSTS?.split(",") || ["localhost"];
 
   return {
     plugins: [
@@ -28,12 +29,12 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       hmr: {
         protocol: "wss",
-        host: env.VITE_ALLOWED_HOSTS?.split(",")[0] || "localhost",
+        host: hosts[0],
       },
       watch: {
         usePolling: true,
       },
-      allowedHosts: env.VITE_ALLOWED_HOSTS?.split(",") || ["localhost"],
+      allowedHosts: hosts,
     },
   };
 });

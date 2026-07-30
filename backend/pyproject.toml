@@ -7,13 +7,16 @@ authors = [
 ]
 requires-python = ">=3.12, <4.0"
 dependencies = [
-    "django (>=6.0.6,<7.0.0)",
     "yookassa (>=3.11.0,<4.0.0)",
     "telegram-webapp-auth (>=3.1.0,<4.0.0)",
-    "django-environ (>=0.13.0,<0.14.0)",
-    "orjson (>=3.11.9,<4.0.0)",
     "granian (>=2.7.6,<3.0.0)",
-    "psycopg[binary,pool] (>=3.3.4,<4.0.0)",
+    "pydantic-settings (>=2.14.2,<3.0.0)",
+    "piccolo[postgres] (>=1.35.0,<2.0.0)",
+    "piccolo-admin (>=1.14.0,<2.0.0)",
+    "litestar (>=2.24.0,<3.0.0)",
+    "redis (>=8.0.1,<9.0.0)",
+    "fast-query-parsers (>=1.0.3,<2.0.0)",
+    "saq (>=0.26.4,<0.27.0)",
 ]
 
 [tool.poetry]
