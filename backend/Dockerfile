@@ -20,6 +20,6 @@ RUN id=tugan-poetry,target=/opt/poetry_cache \
     poetry install --no-root --no-interaction --no-ansi
 
 # ================= PRODUCTION =================
-FROM base AS dev
+FROM base AS prod
 RUN poetry install --no-root --no-interaction --no-ansi
 COPY . .

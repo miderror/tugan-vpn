@@ -64,7 +64,7 @@ class AuthController(Controller):
         db_result = await db_engine.run_querystring(
             QueryString(
                 """
-                SELECT referral_processed 
+                SELECT is_new_user, referral_processed 
                 FROM register_or_get_user({}, {}, {}, {}, {}, {}, {}, {}, {})
                 """,
                 tg_user.id,
@@ -82,9 +82,13 @@ class AuthController(Controller):
         if not db_result:
             return Response(b"", status_code=HTTP_400_BAD_REQUEST)
 
-        if db_result[0].get("referral_processed"):
-            saq_queue = getattr(request.app.state, "saq", None)
-            if saq_queue:
+        row = db_result[0]
+        saq_queue = getattr(request.app.state, "saq", None)
+        if saq_queue:
+            if row.get("is_new_user"):
+                await saq_queue.enqueue("create_user_on_nodes_task", tg_id=tg_user.id)
+
+            if row.get("referral_processed"):
                 await saq_queue.enqueue("sync_vpn_node_task", referrer_id=referrer_id)
                 await saq_queue.enqueue(
                     "notify_new_referral_task",

@@ -27,10 +27,10 @@ CREATE OR REPLACE FUNCTION register_or_get_user(
     p_trial_days INT,
     p_ref_reward_days INT
 ) RETURNS TABLE (
+    is_new_user BOOLEAN,
     referral_processed BOOLEAN
 ) AS $$
 DECLARE
-    v_referral_processed BOOLEAN := FALSE;
     v_sub_id VARCHAR;
     v_client_id VARCHAR;
     v_access_token VARCHAR;
@@ -49,10 +49,14 @@ BEGIN
             OR last_name IS DISTINCT FROM p_last_name
             OR language_code IS DISTINCT FROM p_language_code);
 
+        is_new_user := FALSE;
         referral_processed := FALSE;
         RETURN NEXT;
         RETURN;
     END IF;
+
+    is_new_user := TRUE;
+    referral_processed := FALSE;
 
     v_sub_id := replace(gen_random_uuid()::text, '-', '');
     v_client_id := gen_random_uuid()::text;
@@ -81,12 +85,11 @@ BEGIN
                 UPDATE core_user 
                 SET expiry_date = expiry_date + (p_ref_reward_days || ' days')::INTERVAL 
                 WHERE core_user.tg_id = p_referrer_id;
-                v_referral_processed := TRUE;
+                referral_processed := TRUE;
             END IF;
         END IF;
     END IF;
 
-    referral_processed := v_referral_processed;
     RETURN NEXT;
 END;
 $$ LANGUAGE plpgsql;
