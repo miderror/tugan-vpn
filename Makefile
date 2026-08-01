@@ -9,7 +9,8 @@ PICCOLO_DEV = $(DC_DEV) exec backend piccolo
 
 
 .PHONY: dev-build dev-up dev-down dev-stop dev-restart dev-logs dev-shell \
-        dev-makemigrations dev-migrate dev-superuser dev-static
+        dev-makemigrations dev-makemigrations-manual dev-migrate dev-superuser \
+		dev-redis-flush
 
 # ================= DEV =================
 
@@ -33,6 +34,9 @@ dev-logs:
 
 dev-shell:
 	$(DC_DEV) exec $(s) bash
+
+dev-redis-flush:
+	$(DC_DEV) exec redis redis-cli FLUSHDB
 
 dev-makemigrations:
 	$(PICCOLO_DEV) migrations new db --auto

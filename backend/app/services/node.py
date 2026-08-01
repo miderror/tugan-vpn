@@ -1,6 +1,4 @@
 import asyncio
-import logging
-from collections import defaultdict
 from typing import Any, ClassVar
 
 import httpx
@@ -8,42 +6,85 @@ import msgspec
 
 from app.config.settings import settings
 
-logger = logging.getLogger(__name__)
 
-
-class XUIClientStats(msgspec.Struct, omit_defaults=True):
+class XUIClient(msgspec.Struct, gc=False, omit_defaults=True):
     email: str = ""
     up: int = 0
     down: int = 0
-    totalGB: int = 0
-    enable: bool = True
-    id: str = ""
-    subId: str = ""
-    expiryTime: int = 0
 
 
-class XUISettingsParsed(msgspec.Struct, omit_defaults=True):
-    clients: list[XUIClientStats] = []
+class XUIClientSettings(msgspec.Struct, gc=False, omit_defaults=True):
+    clients: list[XUIClient] = []
 
 
-class XUIInboundRaw(msgspec.Struct, omit_defaults=True):
+class XUIApiResponse(msgspec.Struct, gc=False, omit_defaults=True):
+    success: bool = False
+    msg: str = ""
+
+
+class XUIInboundObj(msgspec.Struct, gc=False, omit_defaults=True):
     settings: str = ""
 
 
-class XUIApiResponse(msgspec.Struct, omit_defaults=True):
+class XUIInboundResponse(msgspec.Struct, gc=False, omit_defaults=True):
     success: bool = False
     msg: str = ""
-    obj: Any = None
+    obj: XUIInboundObj | None = None
+
+
+class XUIClientPayload(msgspec.Struct, gc=False):
+    id: str
+    email: str
+    expiryTime: int
+    totalGB: int = settings.default_traffic_limit_bytes
+    subId: str = ""
+    limitIp: int = 1
+    enable: bool = True
+    flow: str = "xtls-rprx-vision"
+
+
+class XUISettingsWrapper(msgspec.Struct, gc=False):
+    clients: list[XUIClientPayload]
+
+
+class XUIAddClientRequest(msgspec.Struct, gc=False):
+    id: int
+    settings: str
 
 
 XUI_API_DECODER = msgspec.json.Decoder(XUIApiResponse)
-XUI_SETTINGS_DECODER = msgspec.json.Decoder(XUISettingsParsed)
+XUI_INBOUND_DECODER = msgspec.json.Decoder(XUIInboundResponse)
+XUI_SETTINGS_DECODER = msgspec.json.Decoder(XUIClientSettings)
+JSON_ENCODER = msgspec.json.Encoder()
 
 
 class NodeService:
-    _node_semaphores: ClassVar[defaultdict[int, asyncio.Semaphore]] = defaultdict(
-        lambda: asyncio.Semaphore(2)
-    )
+    _session_cache: ClassVar[dict[int, str]] = {}
+    _node_locks: ClassVar[dict[int, asyncio.Lock]] = {}
+
+    @classmethod
+    def _get_lock(cls, node_id: int) -> asyncio.Lock:
+        lock = cls._node_locks.get(node_id)
+        if lock is None:
+            lock = asyncio.Lock()
+            cls._node_locks[node_id] = lock
+        return lock
+
+    @classmethod
+    def _build_client_payload(cls, inbound_id: int, user_data: dict) -> bytes:
+        client = XUIClientPayload(
+            id=user_data["client_id"],
+            email=user_data["email"],
+            expiryTime=int(user_data["expiry_date"].timestamp() * 1000),
+            subId=user_data["sub_id"],
+            enable=user_data["is_active_vpn"],
+        )
+        settings_str = JSON_ENCODER.encode(XUISettingsWrapper(clients=[client])).decode(
+            "utf-8"
+        )
+        return JSON_ENCODER.encode(
+            XUIAddClientRequest(id=inbound_id, settings=settings_str)
+        )
 
     @classmethod
     async def get_session_cookie(
@@ -53,32 +94,35 @@ class NodeService:
         node: dict,
         force_refresh: bool = False,
     ) -> str:
-        cache_key = f"xui_sess:{node['id']}"
+        node_id: int = node["id"]
+        cache_key = f"xui_sess:{node_id}"
 
         if not force_refresh:
-            cookie = await redis_client.get(cache_key)
-            if cookie:
-                return cookie
+            sess = cls._session_cache.get(node_id)
+            if sess:
+                return sess
+            sess = await redis_client.get(cache_key)
+            if sess:
+                cls._session_cache[node_id] = sess
+                return sess
 
         url = f"{node['api_url'].rstrip('/')}/login"
         resp = await http_client.post(
             url,
             data={"username": node["username"], "password": node["password"]},
-            timeout=5.0,
+            timeout=4.0,
         )
 
-        sess = resp.cookies.get("session")
-        if not sess:
-            raise RuntimeError(
-                f"Auth failed for node {node['id']}: HTTP {resp.status_code}"
-            )
+        set_cookie = resp.headers.get("set-cookie", "")
+        end = set_cookie.find(";")
+        cookie_pair = set_cookie[:end] if end != -1 else set_cookie
 
-        await redis_client.setex(cache_key, 3000, sess)
-        return sess
+        if not cookie_pair:
+            raise RuntimeError(f"Auth failed for node {node_id}")
 
-    @classmethod
-    async def invalidate_session_cookie(cls, redis_client: Any, node_id: int) -> None:
-        await redis_client.delete(f"xui_sess:{node_id}")
+        cls._session_cache[node_id] = cookie_pair
+        await redis_client.setex(cache_key, 2700, cookie_pair)
+        return cookie_pair
 
     @classmethod
     async def request_node(
@@ -86,150 +130,152 @@ class NodeService:
         http_client: httpx.AsyncClient,
         redis_client: Any,
         node: dict,
-        method: str,
+        is_post: bool,
         endpoint: str,
-        json_payload: dict | None = None,
-        retries: int = 1,
+        payload_bytes: bytes | None = None,
+        decoder: msgspec.json.Decoder = XUI_API_DECODER,
     ) -> XUIApiResponse | None:
-        node_id = node["id"]
-        sem = cls._node_semaphores[node_id]
+        node_id: int = node["id"]
+        lock = cls._get_lock(node_id)
 
-        async with sem:
-            base_url = node["api_url"].rstrip("/")
-            url = f"{base_url}{endpoint}"
+        async with lock:
+            url = f"{node['api_url'].rstrip('/')}{endpoint}"
+            force_refresh = False
 
-            for attempt in range(retries + 1):
-                cookie = await cls.get_session_cookie(
-                    http_client, redis_client, node, force_refresh=(attempt > 0)
-                )
-                headers = {
-                    "Cookie": f"session={cookie}",
-                    "Accept": "application/json",
-                }
-
+            for attempt in range(2):
                 try:
-                    if method.upper() == "POST":
+                    cookie = await cls.get_session_cookie(
+                        http_client, redis_client, node, force_refresh
+                    )
+                    headers = {
+                        "Cookie": cookie,
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                    }
+
+                    if is_post:
                         resp = await http_client.post(
-                            url, json=json_payload, headers=headers, timeout=8.0
+                            url, content=payload_bytes, headers=headers, timeout=5.0
                         )
                     else:
-                        resp = await http_client.get(url, headers=headers, timeout=10.0)
+                        resp = await http_client.get(url, headers=headers, timeout=5.0)
 
-                    if resp.status_code in (
-                        302,
-                        307,
-                    ) or "text/html" in resp.headers.get("content-type", ""):
-                        await cls.invalidate_session_cookie(redis_client, node_id)
+                    if resp.status_code in (307, 401, 403):
+                        force_refresh = True
                         continue
 
                     if resp.status_code != 200:
-                        logger.warning(
-                            "Node %d returned HTTP %d for %s",
-                            node_id,
-                            resp.status_code,
-                            endpoint,
-                        )
-                        continue
-
-                    parsed = XUI_API_DECODER.decode(resp.content)
-
-                    if (
-                        not parsed.success
-                        and parsed.msg
-                        and any(
-                            word in parsed.msg.lower()
-                            for word in ("login", "session", "登录")
-                        )
-                    ):
-                        await cls.invalidate_session_cookie(redis_client, node_id)
-                        continue
-
-                    return parsed
-
-                except (httpx.HTTPError, msgspec.DecodeError) as err:
-                    logger.error(
-                        "Node request error (%s, attempt %d): %s", url, attempt, err
-                    )
-                    if attempt == retries:
                         return None
 
+                    return decoder.decode(resp.content)
+
+                except (httpx.HTTPError, msgspec.DecodeError):
+                    if attempt == 1:
+                        return None
+                    force_refresh = True
             return None
 
     @classmethod
-    async def fetch_node_traffics(
-        cls, http_client: httpx.AsyncClient, redis_client: Any, node: dict
-    ) -> list[XUIClientStats]:
-        endpoint = f"/panel/api/inbounds/get/{node['inbound_id']}"
-        res = await cls.request_node(http_client, redis_client, node, "GET", endpoint)
-
-        if not res or not res.success or not res.obj or not isinstance(res.obj, dict):
-            return []
-
-        settings_str = res.obj.get("settings")
-        if not settings_str:
-            return []
-
-        try:
-            settings_parsed = XUI_SETTINGS_DECODER.decode(settings_str.encode("utf-8"))
-            return settings_parsed.clients
-        except msgspec.DecodeError as e:
-            logger.error("Failed to parse node %d settings JSON: %s", node["id"], e)
-            return []
-
-    @classmethod
-    async def reset_client_node_traffic(
-        cls, http_client: httpx.AsyncClient, redis_client: Any, node: dict, email: str
-    ) -> bool:
-        endpoint = (
-            f"/panel/api/inbounds/{node['inbound_id']}/resetClientTraffic/{email}"
-        )
-        res = await cls.request_node(http_client, redis_client, node, "POST", endpoint)
-        return bool(res and res.success)
-
-    @classmethod
-    async def upsert_and_reset_client_on_node(
+    async def add_client_on_node(
         cls,
         http_client: httpx.AsyncClient,
         redis_client: Any,
         node: dict,
-        user: dict,
-        enable: bool = True,
-        reset_traffic: bool = False,
+        user_data: dict,
+        payload_bytes: bytes | None = None,
     ) -> bool:
-        expiry_ms = int(user["expiry_date"].timestamp() * 1000)
+        if payload_bytes is None:
+            payload_bytes = cls._build_client_payload(node["inbound_id"], user_data)
 
-        client_dict = {
-            "id": user["client_id"],
-            "email": user["email"],
-            "subId": user["sub_id"],
-            "expiryTime": expiry_ms,
-            "totalGB": settings.default_traffic_limit_bytes,
-            "enable": enable,
-            "limitIp": 0,
-            "alterId": 0,
-        }
-
-        payload = {
-            "id": node["inbound_id"],
-            "settings": msgspec.json.encode({"clients": [client_dict]}).decode("utf-8"),
-        }
-
-        update_endpoint = f"/panel/api/inbounds/updateClient/{user['client_id']}"
         res = await cls.request_node(
-            http_client, redis_client, node, "POST", update_endpoint, payload
+            http_client=http_client,
+            redis_client=redis_client,
+            node=node,
+            is_post=True,
+            endpoint="/panel/api/inbounds/addClient",
+            payload_bytes=payload_bytes,
+        )
+        return bool(res and res.success)
+
+    @classmethod
+    async def update_client_on_node(
+        cls,
+        http_client: httpx.AsyncClient,
+        redis_client: Any,
+        node: dict,
+        user_data: dict,
+    ) -> bool:
+        req_payload = cls._build_client_payload(node["inbound_id"], user_data)
+
+        res = await cls.request_node(
+            http_client=http_client,
+            redis_client=redis_client,
+            node=node,
+            is_post=True,
+            endpoint=f"/panel/api/inbounds/updateClient/{user_data['client_id']}",
+            payload_bytes=req_payload,
         )
 
-        if not res or not res.success:
-            add_endpoint = "/panel/api/inbounds/addClient"
-            res = await cls.request_node(
-                http_client, redis_client, node, "POST", add_endpoint, payload
+        if res and not res.success and "empty client" in res.msg:
+            return await cls.add_client_on_node(
+                http_client, redis_client, node, user_data, payload_bytes=req_payload
             )
+        return bool(res and res.success)
 
-        success = bool(res and res.success)
+    @classmethod
+    async def reset_client_traffic(
+        cls,
+        http_client: httpx.AsyncClient,
+        redis_client: Any,
+        node: dict,
+        email: str,
+    ) -> bool:
+        res = await cls.request_node(
+            http_client=http_client,
+            redis_client=redis_client,
+            node=node,
+            is_post=True,
+            endpoint=f"/panel/api/inbounds/{node['inbound_id']}/resetClientTraffic/{email}",
+        )
+        return bool(res and res.success)
 
-        if success and reset_traffic:
-            await cls.reset_client_node_traffic(
-                http_client, redis_client, node, user["email"]
-            )
+    @classmethod
+    async def accumulate_node_traffics(
+        cls,
+        http_client: httpx.AsyncClient,
+        redis_client: Any,
+        node: dict,
+        active_emails: set[str],
+        traffic_accumulator: dict[str, int],
+    ) -> None:
+        res: XUIInboundResponse | None = await cls.request_node(
+            http_client=http_client,
+            redis_client=redis_client,
+            node=node,
+            is_post=False,
+            endpoint=f"/panel/api/inbounds/get/{node['inbound_id']}",
+            decoder=XUI_INBOUND_DECODER,
+        )
 
-        return success
+        if not res or not res.success or res.obj is None:
+            return
+
+        settings_raw = res.obj.settings
+        del res
+        if not settings_raw:
+            return
+
+        try:
+            parsed_settings = XUI_SETTINGS_DECODER.decode(settings_raw)
+            del settings_raw
+
+            for client in parsed_settings.clients:
+                email = client.email
+                if email in active_emails:
+                    bytes_used = client.up + client.down
+                    if bytes_used > 0:
+                        traffic_accumulator[email] = (
+                            traffic_accumulator.get(email, 0) + bytes_used
+                        )
+        except msgspec.DecodeError:
+            pass

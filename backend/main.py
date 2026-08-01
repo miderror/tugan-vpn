@@ -1,16 +1,21 @@
+import asyncio
+
+import httpx
 from app.api.v1.auth import AuthController
 from app.config.redis_client import init_redis_pool
 from app.config.settings import settings
-from app.db.tables import User
+from app.db.tables import Node, Referral, User
+from app.tasks.traffic_sync import create_user_on_nodes_task
 from litestar import Litestar, Response, Router, asgi
 from litestar.exceptions import ValidationException
 from litestar.status_codes import HTTP_400_BAD_REQUEST
 from litestar.types import Receive, Scope, Send
 from piccolo.engine import engine_finder
 from piccolo_admin.endpoints import create_admin
+from saq import Queue, Worker
 
 admin_asgi_app = create_admin(
-    tables=[User],
+    tables=[User, Referral, Node],
     site_name="Tugan VPN Panel",
 )
 
@@ -30,11 +35,46 @@ async def open_services_connections(app: Litestar) -> None:
     engine = engine_finder()
     await engine.start_connection_pool(min_size=1, max_size=5)
 
-    app.state.redis = await init_redis_pool()
+    redis_client = await init_redis_pool()
+    app.state.redis = redis_client
     app.state.settings = settings
 
+    app.state.http_client = httpx.AsyncClient(
+        limits=httpx.Limits(max_keepalive_connections=10, max_connections=20),
+        timeout=httpx.Timeout(5.0, connect=3.0),
+    )
 
-async def close_services_connections() -> None:
+    saq_queue = Queue.from_url(
+        f"redis://{settings.redis_host}:{settings.redis_port}/{settings.redis_db}"
+    )
+    app.state.saq = saq_queue
+
+    task_context = {
+        "http_client": app.state.http_client,
+        "redis": redis_client,
+    }
+
+    worker = Worker(
+        queue=saq_queue,
+        functions=[create_user_on_nodes_task],
+        concurrency=2,
+        startup=lambda ctx: ctx.update(task_context),
+    )
+
+    app.state.saq_worker_task = asyncio.create_task(worker.start())
+
+
+async def close_services_connections(app: Litestar) -> None:
+    if hasattr(app.state, "saq_worker_task"):
+        app.state.saq_worker_task.cancel()
+        try:
+            await app.state.saq_worker_task
+        except asyncio.CancelledError:
+            pass
+
+    if hasattr(app.state, "http_client"):
+        await app.state.http_client.aclose()
+
     engine = engine_finder()
     await engine.close_connection_pool()
 

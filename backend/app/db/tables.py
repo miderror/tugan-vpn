@@ -1,6 +1,6 @@
 from enum import Enum
 
-from piccolo.columns import BigInt, Boolean, Integer, Text, Timestamptz, Varchar
+from piccolo.columns import BigInt, Boolean, Integer, Serial, Text, Timestamptz, Varchar
 from piccolo.columns.defaults.timestamptz import TimestamptzNow
 from piccolo.table import Table
 
@@ -41,7 +41,7 @@ class NodeTypeChoices(str, Enum):
 
 
 class Node(Table, tablename="core_node"):
-    id = Integer(primary_key=True)
+    id = Serial(primary_key=True)
 
     api_url = Varchar(length=255)
     subscription_url = Varchar(length=255)

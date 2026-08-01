@@ -1,7 +1,7 @@
 from piccolo.apps.migrations.auto.migration_manager import MigrationManager
 from piccolo.table import Table
 
-ID = "2026-07-30T13:52:56:462758"
+ID = "2026-07-31T09:16:15:440203"
 VERSION = "1.35.0"
 DESCRIPTION = "add_register_or_get_user_function"
 
@@ -9,10 +9,9 @@ DESCRIPTION = "add_register_or_get_user_function"
 class RawTable(Table):
     pass
 
+
 DROP_FUNCTION = """
-DROP FUNCTION IF EXISTS register_or_get_user(
-    BIGINT, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, BIGINT, INT, INT
-) CASCADE;
+DROP FUNCTION IF EXISTS register_or_get_user(BIGINT, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, BIGINT, INT, INT) CASCADE;
 """
 
 CREATE_FUNCTION = """

@@ -3,13 +3,14 @@ from enum import Enum
 from piccolo.columns.column_types import BigInt
 from piccolo.columns.column_types import Boolean
 from piccolo.columns.column_types import Integer
+from piccolo.columns.column_types import Serial
 from piccolo.columns.column_types import Text
 from piccolo.columns.column_types import Timestamptz
 from piccolo.columns.column_types import Varchar
 from piccolo.columns.defaults.timestamptz import TimestamptzNow
 from piccolo.columns.indexes import IndexMethod
 
-ID = "2026-07-30T13:41:31:111127"
+ID = "2026-07-31T09:16:02:455280"
 VERSION = "1.35.0"
 DESCRIPTION = ""
 
@@ -20,7 +21,7 @@ async def forwards():
     )
 
     manager.add_table(
-        class_name="Node", tablename="core_node", schema=None, columns=None
+        class_name="User", tablename="core_user", schema=None, columns=None
     )
 
     manager.add_table(
@@ -31,244 +32,7 @@ async def forwards():
     )
 
     manager.add_table(
-        class_name="User", tablename="core_user", schema=None, columns=None
-    )
-
-    manager.add_column(
-        table_class_name="Node",
-        tablename="core_node",
-        column_name="id",
-        db_column_name="id",
-        column_class_name="Integer",
-        column_class=Integer,
-        params={
-            "default": 0,
-            "null": False,
-            "primary_key": True,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Node",
-        tablename="core_node",
-        column_name="api_url",
-        db_column_name="api_url",
-        column_class_name="Varchar",
-        column_class=Varchar,
-        params={
-            "length": 255,
-            "default": "",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Node",
-        tablename="core_node",
-        column_name="subscription_url",
-        db_column_name="subscription_url",
-        column_class_name="Varchar",
-        column_class=Varchar,
-        params={
-            "length": 255,
-            "default": "",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Node",
-        tablename="core_node",
-        column_name="inbound_id",
-        db_column_name="inbound_id",
-        column_class_name="Integer",
-        column_class=Integer,
-        params={
-            "default": 1,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Node",
-        tablename="core_node",
-        column_name="node_type",
-        db_column_name="node_type",
-        column_class_name="Varchar",
-        column_class=Varchar,
-        params={
-            "length": 32,
-            "default": "3x-ui-v2",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": Enum("NodeTypeChoices", {"XUI_V2": "3x-ui-v2"}),
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Node",
-        tablename="core_node",
-        column_name="username",
-        db_column_name="username",
-        column_class_name="Varchar",
-        column_class=Varchar,
-        params={
-            "length": 128,
-            "default": "",
-            "null": True,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Node",
-        tablename="core_node",
-        column_name="password",
-        db_column_name="password",
-        column_class_name="Varchar",
-        column_class=Varchar,
-        params={
-            "length": 255,
-            "default": "",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": True,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Node",
-        tablename="core_node",
-        column_name="is_active",
-        db_column_name="is_active",
-        column_class_name="Boolean",
-        column_class=Boolean,
-        params={
-            "default": True,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": True,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Node",
-        tablename="core_node",
-        column_name="config_template",
-        db_column_name="config_template",
-        column_class_name="Text",
-        column_class=Text,
-        params={
-            "default": "",
-            "null": True,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Referral",
-        tablename="core_referral",
-        column_name="referred_id",
-        db_column_name="referred_id",
-        column_class_name="BigInt",
-        column_class=BigInt,
-        params={
-            "default": 0,
-            "auto_increment": False,
-            "null": False,
-            "primary_key": True,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Referral",
-        tablename="core_referral",
-        column_name="referrer_id",
-        db_column_name="referrer_id",
-        column_class_name="BigInt",
-        column_class=BigInt,
-        params={
-            "default": 0,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": True,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
+        class_name="Node", tablename="core_node", schema=None, columns=None
     )
 
     manager.add_column(
@@ -648,6 +412,242 @@ async def forwards():
         params={
             "default": TimestamptzNow(),
             "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Referral",
+        tablename="core_referral",
+        column_name="referred_id",
+        db_column_name="referred_id",
+        column_class_name="BigInt",
+        column_class=BigInt,
+        params={
+            "default": 0,
+            "auto_increment": False,
+            "null": False,
+            "primary_key": True,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Referral",
+        tablename="core_referral",
+        column_name="referrer_id",
+        db_column_name="referrer_id",
+        column_class_name="BigInt",
+        column_class=BigInt,
+        params={
+            "default": 0,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": True,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Node",
+        tablename="core_node",
+        column_name="id",
+        db_column_name="id",
+        column_class_name="Serial",
+        column_class=Serial,
+        params={
+            "null": False,
+            "primary_key": True,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Node",
+        tablename="core_node",
+        column_name="api_url",
+        db_column_name="api_url",
+        column_class_name="Varchar",
+        column_class=Varchar,
+        params={
+            "length": 255,
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Node",
+        tablename="core_node",
+        column_name="subscription_url",
+        db_column_name="subscription_url",
+        column_class_name="Varchar",
+        column_class=Varchar,
+        params={
+            "length": 255,
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Node",
+        tablename="core_node",
+        column_name="inbound_id",
+        db_column_name="inbound_id",
+        column_class_name="Integer",
+        column_class=Integer,
+        params={
+            "default": 1,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Node",
+        tablename="core_node",
+        column_name="node_type",
+        db_column_name="node_type",
+        column_class_name="Varchar",
+        column_class=Varchar,
+        params={
+            "length": 32,
+            "default": "3x-ui-v2",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": Enum("NodeTypeChoices", {"XUI_V2": "3x-ui-v2"}),
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Node",
+        tablename="core_node",
+        column_name="username",
+        db_column_name="username",
+        column_class_name="Varchar",
+        column_class=Varchar,
+        params={
+            "length": 128,
+            "default": "",
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Node",
+        tablename="core_node",
+        column_name="password",
+        db_column_name="password",
+        column_class_name="Varchar",
+        column_class=Varchar,
+        params={
+            "length": 255,
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": True,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Node",
+        tablename="core_node",
+        column_name="is_active",
+        db_column_name="is_active",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": True,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": True,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Node",
+        tablename="core_node",
+        column_name="config_template",
+        db_column_name="config_template",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": "",
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
