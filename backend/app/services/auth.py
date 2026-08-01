@@ -6,6 +6,8 @@ import time
 import msgspec
 import redis.asyncio as redis
 from fast_query_parsers import parse_query_string
+from litestar import Request
+from litestar.exceptions import NotAuthorizedException
 
 from app.config.settings import settings
 
@@ -59,9 +61,6 @@ async def create_session(redis_client: redis.Redis, tg_id: int) -> str:
 
 
 async def validate_session(redis_client: redis.Redis, token: str) -> int | None:
-    if len(token) < 34:
-        return None
-
     tg_id_str = token[:-33]
     if not tg_id_str.isdigit():
         return None
@@ -72,3 +71,15 @@ async def validate_session(redis_client: redis.Redis, token: str) -> int | None:
         return tg_id
 
     return None
+
+
+async def provide_authenticated_tg_id(request: Request) -> int:
+    session_key = request.headers.get("X-Session-Key")
+    if not session_key or len(session_key) < 34:
+        raise NotAuthorizedException()
+
+    tg_id = await validate_session(request.app.state.redis, session_key)
+    if not tg_id:
+        raise NotAuthorizedException()
+
+    return tg_id

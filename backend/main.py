@@ -6,10 +6,10 @@ from app.api.v1.users import UserController
 from app.config.redis_client import init_redis_pool
 from app.config.settings import settings
 from app.db.tables import Node, Referral, User
-from app.tasks.traffic_sync import create_user_on_nodes_task
+from app.tasks.traffic_sync import create_user_on_nodes_task, update_user_on_nodes_task
 from litestar import Litestar, Response, Router, asgi
-from litestar.exceptions import ValidationException
-from litestar.status_codes import HTTP_400_BAD_REQUEST
+from litestar.exceptions import NotAuthorizedException, ValidationException
+from litestar.status_codes import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from litestar.types import Receive, Scope, Send
 from piccolo.engine import engine_finder
 from piccolo_admin.endpoints import create_admin
@@ -57,7 +57,7 @@ async def open_services_connections(app: Litestar) -> None:
 
     worker = Worker(
         queue=saq_queue,
-        functions=[create_user_on_nodes_task],
+        functions=[create_user_on_nodes_task, update_user_on_nodes_task],
         concurrency=2,
         startup=lambda ctx: ctx.update(task_context),
     )
@@ -83,6 +83,10 @@ async def close_services_connections(app: Litestar) -> None:
         await app.state.redis.close()
 
 
+def unauthorized_exception_handler(request, exception) -> Response:
+    return Response(b"", status_code=HTTP_401_UNAUTHORIZED)
+
+
 def validation_exception_request_handler(request, exception) -> Response:
     print("\n--- ОШИБКА ВАЛИДАЦИИ ВХОДЯЩИХ ДАННЫХ ---")
     print(exception.extra)
@@ -101,6 +105,7 @@ app = Litestar(
     on_startup=[open_services_connections],
     on_shutdown=[close_services_connections],
     exception_handlers={
+        NotAuthorizedException: unauthorized_exception_handler,
         ValidationException: validation_exception_request_handler,
         Exception: empty_bad_request_handler,
     },

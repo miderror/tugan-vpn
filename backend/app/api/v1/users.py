@@ -1,12 +1,13 @@
-from typing import Any
+from typing import Any, ClassVar
 
 import msgspec
 from litestar import Controller, Request, Response, get
+from litestar.di import Provide
 from litestar.status_codes import HTTP_401_UNAUTHORIZED
 from piccolo.engine import engine_finder
 from piccolo.querystring import QueryString
 
-from app.services.auth import validate_session
+from app.services.auth import provide_authenticated_tg_id
 
 db_engine = engine_finder()
 
@@ -19,23 +20,22 @@ class UserMeResponse(msgspec.Struct, gc=False, omit_defaults=True):
     ip: str
 
 
+class ReferralResponse(msgspec.Struct, gc=False):
+    total_count: int = msgspec.field(name="c")
+    items: list[tuple[int, str]] = msgspec.field(name="i")
+
+
 RESPONSE_ENCODER = msgspec.json.Encoder()
 
 
 class UserController(Controller):
     path = "/users"
+    dependencies: ClassVar[dict[str, Any]] = {
+        "tg_id": Provide(provide_authenticated_tg_id)
+    }
 
     @get("/me")
-    async def get_me(self, request: Request[Any, Any, Any]) -> Response:
-        session_key = request.headers.get("X-Session-Key")
-        if not session_key:
-            return Response(b"", status_code=HTTP_401_UNAUTHORIZED)
-
-        redis_client = request.app.state.redis
-        tg_id = await validate_session(redis_client, session_key)
-        if not tg_id:
-            return Response(b"", status_code=HTTP_401_UNAUTHORIZED)
-
+    async def get_me(self, request: Request, tg_id: int) -> Response:
         user_rows = await db_engine.run_querystring(
             QueryString(
                 """
@@ -66,5 +66,45 @@ class UserController(Controller):
 
         return Response(
             RESPONSE_ENCODER.encode(payload),
+            media_type="application/json",
+        )
+
+    @get("/referrals")
+    async def get_referrals(self, tg_id: int) -> Response:
+        count_rows = await db_engine.run_querystring(
+            QueryString(
+                "SELECT COUNT(*) AS total FROM core_referral WHERE referrer_id = {}",
+                tg_id,
+            )
+        )
+
+        total_count: int = count_rows[0]["total"] if count_rows else 0
+
+        if total_count == 0:
+            return Response(
+                RESPONSE_ENCODER.encode(ReferralResponse(total_count=0, items=[])),
+                media_type="application/json",
+            )
+
+        rows = await db_engine.run_querystring(
+            QueryString(
+                """
+                SELECT u.tg_id, COALESCE(u.username, '') AS username
+                FROM core_referral r
+                JOIN core_user u ON r.referred_id = u.tg_id
+                WHERE r.referrer_id = {}
+                ORDER BY r.referred_id DESC
+                LIMIT 50
+                """,
+                tg_id,
+            )
+        )
+
+        items = [(row["tg_id"], row["username"]) for row in rows]
+
+        return Response(
+            RESPONSE_ENCODER.encode(
+                ReferralResponse(total_count=total_count, items=items)
+            ),
             media_type="application/json",
         )

@@ -2,34 +2,50 @@
   <div class="referral-view">
     <BackButton />
     <div class="scrollable-content">
-      <h1 class="referral-title">Реферальная<br>программа</h1>
+      <h1 class="referral-title">Реферальная<br />программа</h1>
       <div class="stats-container">
-        <StatsBox label="Ваш реферальный баланс:" :value="`${referralBalance}₽`" />
+        <StatsBox
+          label="Ваш реферальный баланс:"
+          :value="`${referralBalance}₽`"
+        />
         <StatsBox label="Ваши рефералы:" :value="referralCount" />
       </div>
       <ReferralLink :referralLink="referralLink" />
       <div class="referral-list">
-        <ReferralUser v-for="user in referralUsers" :key="user.id" :user="user" />
+        <ReferralUser
+          v-for="user in referralUsers"
+          :key="user.id"
+          :user="user"
+        />
       </div>
-      <InfoBanner class="info-banner" text="С каждого приведённого друга вы будете получать 100₽ на баланс" />
+      <InfoBanner
+        class="info-banner"
+        text="С каждого приведённого друга вы будете получать 100₽ на баланс"
+      />
     </div>
     <DashboardButton class="dashboard-button" />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
-import { fetchReferralData, getTelegramUserAvatar } from '@/api';
-import { useTwaSdk } from '@/composables/useTwaSdk';
-import StatsBox from '@/components/StatsBox.vue';
-import ReferralLink from '@/components/ReferralLink.vue';
-import ReferralUser from '@/components/ReferralUser.vue';
-import InfoBanner from '@/components/InfoBanner.vue';
-import DashboardButton from '@/components/DashboardButton.vue';
-import BackButton from '@/components/BackButton.vue';
+import { defineComponent, ref, onMounted } from "vue";
+import { fetchReferralData, getTelegramUserAvatar } from "@/api";
+import { useTwaSdk } from "@/composables/useTwaSdk";
+import StatsBox from "@/components/StatsBox.vue";
+import ReferralLink from "@/components/ReferralLink.vue";
+import ReferralUser from "@/components/ReferralUser.vue";
+import InfoBanner from "@/components/InfoBanner.vue";
+import DashboardButton from "@/components/DashboardButton.vue";
+import BackButton from "@/components/BackButton.vue";
+
+interface ReferralDisplayUser {
+  id: number;
+  username: string;
+  avatar: () => Promise<string | null>;
+}
 
 export default defineComponent({
-  name: 'ReferralView',
+  name: "ReferralView",
   components: {
     StatsBox,
     ReferralLink,
@@ -42,27 +58,29 @@ export default defineComponent({
     const { getUserData } = useTwaSdk();
     const referralBalance = ref(0);
     const referralCount = ref(0);
-    const referralLink = ref('https://t.me/your_referral_link');
-    const referralUsers = ref<{ id: number; username: string; avatar: () => Promise<string | null> }[]>([]);
+    const referralLink = ref("");
+    const referralUsers = ref<ReferralDisplayUser[]>([]);
 
     onMounted(async () => {
       const userData = getUserData();
       if (userData?.id) {
         const botUsername = import.meta.env.VITE_BOT_USERNAME;
         const appName = import.meta.env.VITE_APP_NAME;
-        referralLink.value = `https://t.me/${botUsername}/${appName}?startapp=${userData.id}`;
+        referralLink.value = `https://t.me/${botUsername}/${appName}?startapp=ref_${userData.id}`;
       }
 
       try {
-        const referralData = await fetchReferralData() as { id: number; username: string }[];
-        referralUsers.value = referralData.map(user => ({
-          id: user.id,
-          username: user.username,
-          avatar: getTelegramUserAvatar(user.id),
+        const data = await fetchReferralData();
+        referralCount.value = data.c;
+        referralBalance.value = data.c * 100;
+        referralUsers.value = data.i.map(([id, username]) => ({
+          id,
+          username: username || `ID: ${id}`,
+          avatar: getTelegramUserAvatar(id),
         }));
-        referralCount.value = referralData.length;
-        referralBalance.value = referralData.length * 100;
-      } catch (error) {}
+      } catch (error) {
+        console.error("Failed to fetch referrals", error);
+      }
     });
 
     return {
@@ -96,7 +114,9 @@ export default defineComponent({
 }
 
 .info-banner {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
   font-style: normal;
   margin-top: auto;
   -webkit-font-smoothing: antialiased;
@@ -129,6 +149,6 @@ export default defineComponent({
 
 .dashboard-button {
   flex-shrink: 0;
-  margin-top: auto
+  margin-top: auto;
 }
 </style>

@@ -23,3 +23,8 @@ export interface UserMeApiResponse {
   f: number;
   ip: string;
 }
+
+export interface ReferralApiResponse {
+  c: number;
+  i: [number, string][];
+}

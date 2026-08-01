@@ -1,6 +1,10 @@
 import msgspec
 from litestar import Controller, Request, Response, post
-from litestar.status_codes import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN
+from litestar.status_codes import (
+    HTTP_200_OK,
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+)
 from piccolo.engine import engine_finder
 from piccolo.querystring import QueryString
 
@@ -31,20 +35,20 @@ class AuthController(Controller):
     async def login(self, request: Request) -> SessionResponse | Response:
         init_data_str = request.headers.get("Telegram-Init-Data")
         if not init_data_str:
-            return Response(b"", status_code=HTTP_400_BAD_REQUEST)
+            return Response(b"", status_code=HTTP_401_UNAUTHORIZED)
 
         validated_data = validate_init_data(init_data_str.encode())
         if not validated_data:
-            return Response(b"", status_code=HTTP_403_FORBIDDEN)
+            return Response(b"", status_code=HTTP_401_UNAUTHORIZED)
 
         tg_user_str = validated_data.get("user")
         if not tg_user_str:
-            return Response(b"", status_code=HTTP_400_BAD_REQUEST)
+            return Response(b"", status_code=HTTP_401_UNAUTHORIZED)
 
         try:
             tg_user = TG_USER_DECODER.decode(tg_user_str)
         except msgspec.DecodeError:
-            return Response(b"", status_code=HTTP_400_BAD_REQUEST)
+            return Response(b"", status_code=HTTP_401_UNAUTHORIZED)
 
         redis_client = request.app.state.redis
         active_session = await get_active_session(redis_client, tg_user.id)
@@ -58,7 +62,7 @@ class AuthController(Controller):
             raw_ref = start_param[4:]
             if raw_ref.isdigit():
                 referrer_id = int(raw_ref)
-        else:
+        elif start_param:
             utm_source = start_param[:64]
 
         db_result = await db_engine.run_querystring(
@@ -89,12 +93,7 @@ class AuthController(Controller):
                 await saq_queue.enqueue("create_user_on_nodes_task", tg_id=tg_user.id)
 
             if row.get("referral_processed"):
-                await saq_queue.enqueue("sync_vpn_node_task", referrer_id=referrer_id)
-                await saq_queue.enqueue(
-                    "notify_new_referral_task",
-                    referrer_id=referrer_id,
-                    referred_username=tg_user.username,
-                )
+                await saq_queue.enqueue("update_user_on_nodes_task", tg_id=referrer_id)
 
         session_key = await create_session(redis_client, tg_user.id)
         return SessionResponse(session_key=session_key)
