@@ -1,7 +1,8 @@
 import apiClient from "./apiClient";
+import type { UserMeApiResponse } from "@/types";
 
-export const fetchCurrentUser = async () => {
-  const response = await apiClient.get("/users/me/");
+export const fetchCurrentUser = async (): Promise<UserMeApiResponse> => {
+  const response = await apiClient.get<UserMeApiResponse>("/users/me");
   return response.data;
 };
 

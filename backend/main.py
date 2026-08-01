@@ -2,6 +2,7 @@ import asyncio
 
 import httpx
 from app.api.v1.auth import AuthController
+from app.api.v1.users import UserController
 from app.config.redis_client import init_redis_pool
 from app.config.settings import settings
 from app.db.tables import Node, Referral, User
@@ -27,7 +28,7 @@ async def admin_handler(scope: Scope, receive: Receive, send: Send) -> None:
 
 api_v1_router = Router(
     path="/api/v1",
-    route_handlers=[AuthController],
+    route_handlers=[AuthController, UserController],
 )
 
 

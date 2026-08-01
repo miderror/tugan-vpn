@@ -17,8 +17,8 @@ class TelegramUser(msgspec.Struct):
     language_code: str = ""
 
 
-class SessionResponse(msgspec.Struct):
-    session_key: str
+class SessionResponse(msgspec.Struct, gc=False):
+    session_key: str = msgspec.field(name="sk")
 
 
 TG_USER_DECODER = msgspec.json.Decoder(TelegramUser)

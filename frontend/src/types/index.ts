@@ -15,3 +15,11 @@ export interface Tariff {
   originalPrice?: number;
   isBestseller: boolean;
 }
+
+export interface UserMeApiResponse {
+  at: string;
+  ub: number;
+  exp: string;
+  f: number;
+  ip: string;
+}

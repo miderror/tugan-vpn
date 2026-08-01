@@ -64,11 +64,9 @@ class NodeService:
 
     @classmethod
     def _get_lock(cls, node_id: int) -> asyncio.Lock:
-        lock = cls._node_locks.get(node_id)
-        if lock is None:
-            lock = asyncio.Lock()
-            cls._node_locks[node_id] = lock
-        return lock
+        if node_id not in cls._node_locks:
+            cls._node_locks[node_id] = asyncio.Lock()
+        return cls._node_locks[node_id]
 
     @classmethod
     def _build_client_payload(cls, inbound_id: int, user_data: dict) -> bytes:
