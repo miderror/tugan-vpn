@@ -1,10 +1,10 @@
 export interface TariffApiResponse {
   id: number;
-  display_name: string;
-  duration_days: number;
-  price: string;
-  is_bestseller: boolean;
-  original_price: string | null;
+  dn: string;
+  dd: number;
+  p: string;
+  ib: boolean;
+  op: string | null;
 }
 
 export interface Tariff {

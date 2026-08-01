@@ -2,10 +2,11 @@ import asyncio
 
 import httpx
 from app.api.v1.auth import AuthController
+from app.api.v1.billing import BillingController
 from app.api.v1.users import UserController
 from app.config.redis_client import init_redis_pool
 from app.config.settings import settings
-from app.db.tables import Node, Referral, User
+from app.db.tables import Node, Payment, Referral, Tariff, User
 from app.tasks.traffic_sync import create_user_on_nodes_task, update_user_on_nodes_task
 from litestar import Litestar, Response, Router, asgi
 from litestar.exceptions import NotAuthorizedException, ValidationException
@@ -16,7 +17,7 @@ from piccolo_admin.endpoints import create_admin
 from saq import Queue, Worker
 
 admin_asgi_app = create_admin(
-    tables=[User, Referral, Node],
+    tables=[User, Referral, Node, Tariff, Payment],
     site_name="Tugan VPN Panel",
 )
 
@@ -28,7 +29,7 @@ async def admin_handler(scope: Scope, receive: Receive, send: Send) -> None:
 
 api_v1_router = Router(
     path="/api/v1",
-    route_handlers=[AuthController, UserController],
+    route_handlers=[AuthController, UserController, BillingController],
 )
 
 
@@ -101,7 +102,7 @@ def empty_bad_request_handler(request, exception) -> Response:
 
 app = Litestar(
     route_handlers=[admin_handler, api_v1_router],
-    debug=True,
+    debug=settings.debug,
     on_startup=[open_services_connections],
     on_shutdown=[close_services_connections],
     exception_handlers={

@@ -1,6 +1,15 @@
 from enum import Enum
 
-from piccolo.columns import BigInt, Boolean, Integer, Serial, Text, Timestamptz, Varchar
+from piccolo.columns import (
+    BigInt,
+    Boolean,
+    Integer,
+    Numeric,
+    Serial,
+    Text,
+    Timestamptz,
+    Varchar,
+)
 from piccolo.columns.defaults.timestamptz import TimestamptzNow
 from piccolo.table import Table
 
@@ -58,3 +67,21 @@ class Node(Table, tablename="core_node"):
     is_active = Boolean(default=True, index=True)
 
     config_template = Text(null=True)
+
+
+class Tariff(Table, tablename="core_tariff"):
+    id = Serial(primary_key=True)
+    display_name = Varchar(length=64)
+    duration_days = Integer()
+    price = Numeric(digits=(10, 2))
+    original_price = Numeric(digits=(10, 2), null=True)
+    is_bestseller = Boolean(default=False)
+    is_active = Boolean(default=True, index=True)
+
+
+class Payment(Table, tablename="core_payment"):
+    payment_id = Varchar(length=64, primary_key=True, auto_increment=False)
+    tg_id = BigInt(index=True)
+    tariff_id = Integer()
+    amount = Numeric(digits=(10, 2))
+    created_at = Timestamptz(default=TimestamptzNow())

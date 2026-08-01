@@ -1,9 +1,14 @@
+import base64
+from functools import cached_property
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class AppSettings(BaseSettings):
     model_config = SettingsConfigDict(extra="ignore")
+
+    debug: bool = Field(default=False, alias="DEBUG")
 
     postgres_db: str = Field(alias="POSTGRES_DB")
     postgres_user: str = Field(alias="POSTGRES_USER")
@@ -24,6 +29,10 @@ class AppSettings(BaseSettings):
         default=268_435_456_000, alias="DEFAULT_TRAFFIC_LIMIT_BYTES"
     )
 
+    yookassa_shop_id: str = Field(alias="YOOKASSA_SHOP_ID")
+    yookassa_secret_key: str = Field(alias="YOOKASSA_SECRET_KEY")
+    webapp_url: str = Field(alias="WEBAPP_URL")
+
     @property
     def admin_path(self) -> str:
         clean_path = self.admin_path_raw.strip("/")
@@ -32,6 +41,11 @@ class AppSettings(BaseSettings):
     @property
     def database_url(self) -> str:
         return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+
+    @cached_property
+    def yookassa_auth_header(self) -> str:
+        credentials = f"{self.yookassa_shop_id}:{self.yookassa_secret_key}".encode()
+        return f"Basic {base64.b64encode(credentials).decode()}"
 
 
 settings = AppSettings()

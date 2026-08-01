@@ -1,5 +1,3 @@
-export { getTelegramUserAvatar } from "./userApi";
+export { fetchCurrentUser, claimGift, getTelegramUserAvatar } from "./userApi";
 export { fetchReferralData } from "./referralApi";
-export { fetchCurrentUser, claimGift } from "./xuiApi";
-export { fetchTariffs } from "./tariffApi";
-export { createPayment, createTelegramInvoice } from "./yookassaApi";
+export { fetchTariffs, createPayment } from "./billingApi";
