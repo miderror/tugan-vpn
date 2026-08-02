@@ -56,7 +56,7 @@ export function useUserStore() {
         usage: formatBytes(data.ub || 0),
         subscription_date: formatDate(data.exp),
         ip: data.ip || "127.0.0.1",
-        vpn_url: data.at ? `/api/v1/sub/${data.at}` : "",
+        vpn_url: data.at ? `/api/sub/${data.at}` : "",
         can_claim_gift: !claimedGift,
         tried_to_connect: triedToConnect,
         is_active: isActiveVpn,

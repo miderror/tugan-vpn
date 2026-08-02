@@ -66,7 +66,7 @@ class Node(Table, tablename="core_node"):
 
     is_active = Boolean(default=True, index=True)
 
-    config_template = Text(null=True)
+    config_template = Text(default="")
 
 
 class Tariff(Table, tablename="core_tariff"):

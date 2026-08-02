@@ -3,6 +3,7 @@ import asyncio
 import httpx
 from app.api.v1.auth import AuthController
 from app.api.v1.billing import BillingController
+from app.api.v1.subscription import SubscriptionController
 from app.api.v1.users import UserController
 from app.api.v1.webhooks.yookassa import YookassaWebhookController
 from app.config.redis_client import init_redis_pool
@@ -119,7 +120,12 @@ def empty_bad_request_handler(request, exception) -> Response:
 
 
 app = Litestar(
-    route_handlers=[admin_handler, api_v1_router, YookassaWebhookController],
+    route_handlers=[
+        admin_handler,
+        api_v1_router,
+        YookassaWebhookController,
+        SubscriptionController,
+    ],
     debug=settings.debug,
     on_startup=[open_services_connections],
     on_shutdown=[close_services_connections],
