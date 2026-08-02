@@ -7,6 +7,14 @@ from app.api.v1.users import UserController
 from app.config.redis_client import init_redis_pool
 from app.config.settings import settings
 from app.db.tables import Node, Payment, Referral, Tariff, User
+from app.tasks.notifications import (
+    send_admin_payment_notification_task,
+    send_payment_success_notification_task,
+    send_referral_notification_task,
+    send_subscription_expiry_notification_task,
+    send_trial_activation_notification_task,
+    send_trial_period_end_notification_task,
+)
 from app.tasks.traffic_sync import create_user_on_nodes_task, update_user_on_nodes_task
 from litestar import Litestar, Response, Router, asgi
 from litestar.exceptions import NotAuthorizedException, ValidationException
@@ -58,8 +66,17 @@ async def open_services_connections(app: Litestar) -> None:
 
     worker = Worker(
         queue=saq_queue,
-        functions=[create_user_on_nodes_task, update_user_on_nodes_task],
-        concurrency=2,
+        functions=[
+            create_user_on_nodes_task,
+            update_user_on_nodes_task,
+            send_referral_notification_task,
+            send_subscription_expiry_notification_task,
+            send_payment_success_notification_task,
+            send_admin_payment_notification_task,
+            send_trial_activation_notification_task,
+            send_trial_period_end_notification_task,
+        ],
+        concurrency=4,
         startup=lambda ctx: ctx.update(task_context),
     )
 

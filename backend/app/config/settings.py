@@ -22,6 +22,7 @@ class AppSettings(BaseSettings):
     redis_db: int = Field(default=0, alias="REDIS_DB")
 
     admin_path_raw: str = Field(default="admin", alias="ADMIN_PATH")
+    admin_ids_raw: str = Field(default="", alias="ADMIN_IDS")
 
     telegram_bot_token: str = Field(alias="TELEGRAM_BOT_TOKEN")
 
@@ -46,6 +47,14 @@ class AppSettings(BaseSettings):
     def yookassa_auth_header(self) -> str:
         credentials = f"{self.yookassa_shop_id}:{self.yookassa_secret_key}".encode()
         return f"Basic {base64.b64encode(credentials).decode()}"
+
+    @cached_property
+    def admin_ids(self) -> list[int]:
+        if not self.admin_ids_raw:
+            return []
+        return [
+            int(x.strip()) for x in self.admin_ids_raw.split(",") if x.strip().isdigit()
+        ]
 
 
 settings = AppSettings()
