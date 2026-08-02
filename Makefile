@@ -105,11 +105,14 @@ prod-build-front:
 prod-migrate:
 	$(PICCOLO_PROD) migrations forwards all
 
+prod-db-up:
+	$(DC_PROD) up -d db redis
+
 prod-migrate-init:
 	$(DC_PROD) run --rm backend piccolo migrations forwards all
 
 prod-import-data:
-	$(DC_PROD) exec backend python app/tasks/migrate_old_data.py $(or $(file),data_logic.json)
+	$(DC_PROD) run --rm -v $(shell pwd)/backend/data_logic.json:/app/data_logic.json backend python app/tasks/migrate_old_data.py data_logic.json
 
 prod-superuser:
 	$(PICCOLO_PROD) user create
