@@ -1,9 +1,9 @@
 from piccolo.apps.migrations.auto.migration_manager import MigrationManager
 from piccolo.table import Table
 
-ID = "2026-08-02T02:59:54:069401"
+ID = "2026-08-02T06:33:41:892046"
 VERSION = "1.35.0"
-DESCRIPTION = "manual_migration"
+DESCRIPTION = "process_yookassa_payment"
 
 
 class RawTable(Table):

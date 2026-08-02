@@ -40,3 +40,4 @@ media/
 static/
 
 *.sql
+*.json

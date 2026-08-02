@@ -109,3 +109,18 @@ async def send_trial_period_end_notification_task(
         "Пожалуйста, продлите подписку, чтобы продолжить использование."
     )
     await send_telegram_message(ctx["http_client"], user_id, text)
+
+
+async def send_bot_start_message_task(ctx: dict[str, Any], *, chat_id: int) -> None:
+    text = "👋 Привет! Я бот для управления подпиской на VPN."
+    markup = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Запустить",
+                    url=settings.webapp_url,
+                )
+            ]
+        ]
+    )
+    await send_telegram_message(ctx["http_client"], chat_id, text, reply_markup=markup)

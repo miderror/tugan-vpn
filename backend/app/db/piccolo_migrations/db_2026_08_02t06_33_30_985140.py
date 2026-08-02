@@ -1,9 +1,9 @@
 from piccolo.apps.migrations.auto.migration_manager import MigrationManager
 from piccolo.table import Table
 
-ID = "2026-07-31T09:16:15:440203"
+ID = "2026-08-02T06:33:30:985140"
 VERSION = "1.35.0"
-DESCRIPTION = "add_register_or_get_user_function"
+DESCRIPTION = "register_or_get_user"
 
 
 class RawTable(Table):

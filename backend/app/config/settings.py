@@ -25,6 +25,8 @@ class AppSettings(BaseSettings):
     admin_ids_raw: str = Field(default="", alias="ADMIN_IDS")
 
     telegram_bot_token: str = Field(alias="TELEGRAM_BOT_TOKEN")
+    telegram_webhook_secret: str = Field(alias="TELEGRAM_WEBHOOK_SECRET")
+    telegram_webhook_url : str = Field(alias="TELEGRAM_WEBHOOK_URL")
 
     default_traffic_limit_bytes: int = Field(
         default=268_435_456_000, alias="DEFAULT_TRAFFIC_LIMIT_BYTES"

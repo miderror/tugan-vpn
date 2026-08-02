@@ -5,12 +5,14 @@ from app.api.v1.auth import AuthController
 from app.api.v1.billing import BillingController
 from app.api.v1.subscription import SubscriptionController
 from app.api.v1.users import UserController
+from app.api.v1.webhooks.telegram import TelegramWebhookController
 from app.api.v1.webhooks.yookassa import YookassaWebhookController
 from app.config.redis_client import init_redis_pool
 from app.config.settings import settings
 from app.db.tables import Node, Notification, Payment, Referral, Tariff, User
 from app.tasks.notifications import (
     send_admin_payment_notification_task,
+    send_bot_start_message_task,
     send_payment_success_notification_task,
     send_referral_notification_task,
     send_subscription_expiry_notification_task,
@@ -78,6 +80,7 @@ async def open_services_connections(app: Litestar) -> None:
             send_admin_payment_notification_task,
             send_trial_activation_notification_task,
             send_trial_period_end_notification_task,
+            send_bot_start_message_task,
         ],
         cron_jobs=[
             CronJob(check_and_enqueue_periodic_notifications_task, cron="*/15 * * * *")
@@ -128,6 +131,7 @@ app = Litestar(
         admin_handler,
         api_v1_router,
         YookassaWebhookController,
+        TelegramWebhookController,
         SubscriptionController,
     ],
     debug=settings.debug,
