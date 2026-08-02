@@ -49,15 +49,15 @@ async def send_subscription_expiry_notification_task(
 
 
 async def send_payment_success_notification_task(
-    ctx: dict[str, Any], *, user_id: int, amount: str, duration: str
+    ctx: dict[str, Any], *, user_id: int, amount: str, tariff_name: str
 ) -> None:
     text = (
         "✅ Оплата прошла успешно!\n\n"
         f"💳 Сумма оплаты: <b>{amount} ₽</b>\n"
-        f"⏳ Подписка продлена на: <b>{duration}</b>\n\n"
+        f"⏳ Подписка продлена на: <b>{tariff_name}</b>\n\n"
         "Спасибо за покупку! 😊"
     )
-    await send_telegram_message(ctx["http_client"], user_id, text)
+    await send_telegram_message(ctx["http_client"], user_id, text, parse_mode="HTML")
 
 
 async def send_admin_payment_notification_task(
@@ -67,7 +67,7 @@ async def send_admin_payment_notification_task(
     username: str,
     payment_id: str,
     amount: str,
-    duration: str,
+    tariff_name: str,
 ) -> None:
     if not settings.admin_ids:
         return
@@ -75,10 +75,10 @@ async def send_admin_payment_notification_task(
     username_display = f"@{username}" if username else "без username"
     text = (
         "💰 <b>Новый платеж!</b>\n\n"
-        f"👤 Пользователь: <b>{username_display}</b>\n"
+        f"👤 Пользователь: {username_display}\n"
         f"🆔 Telegram ID: <code>{user_id}</code>\n"
         f"💰 Сумма: <b>{amount} ₽</b>\n"
-        f"📅 Продление на: <b>{duration}</b>\n"
+        f"📅 Продление на: <b>{tariff_name}</b>\n"
         f"💳 Система оплаты: <b>yookassa</b>\n"
         f"🧾 ID платежа: <code>{payment_id}</code>\n\n"
         "📢 <i>Платеж успешно обработан!</i>"
@@ -86,7 +86,7 @@ async def send_admin_payment_notification_task(
 
     http_client = ctx["http_client"]
     for admin_id in settings.admin_ids:
-        await send_telegram_message(http_client, admin_id, text)
+        await send_telegram_message(http_client, admin_id, text, parse_mode="HTML")
 
 
 async def send_trial_activation_notification_task(

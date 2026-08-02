@@ -7,8 +7,6 @@ authors = [
 ]
 requires-python = ">=3.12, <4.0"
 dependencies = [
-    "yookassa (>=3.11.0,<4.0.0)",
-    "telegram-webapp-auth (>=3.1.0,<4.0.0)",
     "granian (>=2.7.6,<3.0.0)",
     "pydantic-settings (>=2.14.2,<3.0.0)",
     "piccolo[postgres] (>=1.35.0,<2.0.0)",

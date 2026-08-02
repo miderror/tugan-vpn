@@ -17,10 +17,10 @@ class InlineKeyboardMarkup(msgspec.Struct, gc=False):
     inline_keyboard: list[list[InlineKeyboardButton]]
 
 
-class TelegramMessagePayload(msgspec.Struct, gc=False):
+class TelegramMessagePayload(msgspec.Struct, gc=False, omit_defaults=True):
     chat_id: int
     text: str
-    parse_mode: str = "HTML"
+    parse_mode: str | None = None
     reply_markup: InlineKeyboardMarkup | None = None
 
 
@@ -42,10 +42,12 @@ async def send_telegram_message(
     chat_id: int,
     text: str,
     reply_markup: InlineKeyboardMarkup | None = None,
+    parse_mode: str | None = None,
 ) -> bool:
     payload = TelegramMessagePayload(
         chat_id=chat_id,
         text=text,
+        parse_mode=parse_mode,
         reply_markup=reply_markup,
     )
 
