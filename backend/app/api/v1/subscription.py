@@ -52,7 +52,7 @@ class SubscriptionController(Controller):
             )
 
             configs = [
-                row["config_template"].format(client_id).encode("utf-8")
+                row["config_template"].replace("{}", client_id).encode("utf-8")
                 for row in node_rows
                 if "{}" in row["config_template"]
             ]

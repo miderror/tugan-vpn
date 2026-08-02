@@ -32,6 +32,7 @@ from saq import CronJob, Queue, Worker
 admin_asgi_app = create_admin(
     tables=[User, Referral, Node, Tariff, Payment, Notification],
     site_name="Tugan VPN Panel",
+    production=not settings.debug,
 )
 
 

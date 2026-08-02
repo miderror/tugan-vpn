@@ -38,6 +38,7 @@ Thumbs.db
 
 media/
 static/
+ssl/
 
 *.sql
 *.json

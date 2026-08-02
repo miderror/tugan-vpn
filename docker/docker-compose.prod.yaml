@@ -1,0 +1,100 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: tugan-db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data/
+    env_file:
+      - ../.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: tugan-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    env_file:
+      - ../.env
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      target: prod
+    container_name: tugan-backend
+    command: granian --interface asgi --host 0.0.0.0 --port 8000 --workers 1 main:app
+    env_file:
+      - ../.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  frontend-builder:
+    profiles: ["tools"]
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      target: prod-exporter
+    container_name: tugan-frontend-builder
+    volumes:
+      - frontend-dist:/frontend_static
+    env_file:
+      - ../frontend/.env
+
+  nginx:
+    image: nginx:1.27.5-alpine
+    container_name: tugan-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/prod.conf:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/convert_env.sh:/docker-entrypoint.d/01-convert_env.sh:ro
+      - frontend-dist:/var/www/frontend:ro
+      - ../ssl:/etc/letsencrypt:ro
+    environment:
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      ADMIN_PATH: ${ADMIN_PATH}
+    depends_on:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
+  frontend-dist:
