@@ -45,7 +45,9 @@ async def send_subscription_expiry_notification_task(
             ]
         ]
     )
-    await send_telegram_message(ctx["http_client"], user_id, text, reply_markup=markup)
+    await send_telegram_message(
+        ctx["http_client"], user_id, text, reply_markup=markup, parse_mode="HTML"
+    )
 
 
 async def send_payment_success_notification_task(

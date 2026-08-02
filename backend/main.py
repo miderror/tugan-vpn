@@ -8,7 +8,7 @@ from app.api.v1.users import UserController
 from app.api.v1.webhooks.yookassa import YookassaWebhookController
 from app.config.redis_client import init_redis_pool
 from app.config.settings import settings
-from app.db.tables import Node, Payment, Referral, Tariff, User
+from app.db.tables import Node, Notification, Payment, Referral, Tariff, User
 from app.tasks.notifications import (
     send_admin_payment_notification_task,
     send_payment_success_notification_task,
@@ -17,6 +17,7 @@ from app.tasks.notifications import (
     send_trial_activation_notification_task,
     send_trial_period_end_notification_task,
 )
+from app.tasks.periodic import check_and_enqueue_periodic_notifications_task
 from app.tasks.traffic_sync import create_user_on_nodes_task, update_user_on_nodes_task
 from litestar import Litestar, Response, Router, asgi
 from litestar.exceptions import NotAuthorizedException, ValidationException
@@ -24,10 +25,10 @@ from litestar.status_codes import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from litestar.types import Receive, Scope, Send
 from piccolo.engine import engine_finder
 from piccolo_admin.endpoints import create_admin
-from saq import Queue, Worker
+from saq import CronJob, Queue, Worker
 
 admin_asgi_app = create_admin(
-    tables=[User, Referral, Node, Tariff, Payment],
+    tables=[User, Referral, Node, Tariff, Payment, Notification],
     site_name="Tugan VPN Panel",
 )
 
@@ -77,6 +78,9 @@ async def open_services_connections(app: Litestar) -> None:
             send_admin_payment_notification_task,
             send_trial_activation_notification_task,
             send_trial_period_end_notification_task,
+        ],
+        cron_jobs=[
+            CronJob(check_and_enqueue_periodic_notifications_task, cron="*/15 * * * *")
         ],
         concurrency=4,
         startup=lambda ctx: ctx.update(task_context),

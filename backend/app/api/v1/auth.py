@@ -91,9 +91,9 @@ class AuthController(Controller):
         if saq_queue:
             if row.get("is_new_user"):
                 await saq_queue.enqueue("create_user_on_nodes_task", tg_id=tg_user.id)
-                await saq_queue.enqueue(
-                    "send_trial_activation_notification_task", user_id=tg_user.id
-                )
+                # await saq_queue.enqueue(
+                #     "send_trial_activation_notification_task", user_id=tg_user.id
+                # )
 
             if row.get("referral_processed"):
                 await saq_queue.enqueue("update_user_on_nodes_task", tg_id=referrer_id)

@@ -56,7 +56,7 @@ export function useTwaSdk() {
     let appUrl: string;
 
     if (platform === "ios") {
-      appUrl = `streisand://import/${subscriptionUrl}#TUGANVPN`;
+      appUrl = `happ://add/${subscriptionUrl}`;
     } else if (platform == "android") {
       appUrl = `v2raytun://import/${subscriptionUrl}`;
     } else {
@@ -71,7 +71,7 @@ export function useTwaSdk() {
     let appUrl: string;
 
     if (platform === "ios") {
-      appUrl = `streisand://import/route/${RULES_SINGBOX_BASE64}`;
+      appUrl = `happ://routing/add/${RULES_SINGBOX_BASE64}`;
     } else if (platform === "android") {
       appUrl = `v2raytun://import_route/${RULES_V2RAY_BASE64}`;
     } else {

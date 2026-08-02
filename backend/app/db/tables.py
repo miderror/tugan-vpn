@@ -85,3 +85,10 @@ class Payment(Table, tablename="core_payment"):
     tariff_id = Integer()
     amount = Numeric(digits=(10, 2))
     created_at = Timestamptz(default=TimestamptzNow())
+
+
+class Notification(Table, tablename="core_notification"):
+    id = Serial(primary_key=True)
+    tg_id = BigInt(index=True)
+    notification_type = Varchar(length=64, index=True)
+    created_at = Timestamptz(default=TimestamptzNow())
