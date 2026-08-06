@@ -80,7 +80,8 @@ class Tariff(Table, tablename="core_tariff"):
 
 
 class Payment(Table, tablename="core_payment"):
-    payment_id = Varchar(length=64, primary_key=True, auto_increment=False)
+    id = Serial(primary_key=True)
+    payment_id = Varchar(length=64, unique=True, index=True)
     tg_id = BigInt(index=True)
     tariff_id = Integer()
     amount = Numeric(digits=(10, 2))

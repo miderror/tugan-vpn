@@ -68,6 +68,9 @@ dev-migrate-init:
 dev-import-data:
 	$(DC_DEV) run --rm backend python app/tasks/migrate_old_data.py $(or $(file),data_logic.json)
 
+dev-fix-payments:
+	$(DC_DEV) exec backend python app/tasks/fix_payments_data.py $(or $(file),data_logic.json)
+
 dev-webhook-set:
 	$(DC_DEV) exec backend python app/tasks/manage_webhook.py set
 
@@ -113,6 +116,9 @@ prod-migrate-init:
 
 prod-import-data:
 	$(DC_PROD) run --rm -v $(shell pwd)/backend/data_logic.json:/app/data_logic.json backend python app/tasks/migrate_old_data.py data_logic.json
+
+prod-fix-payments:
+	$(DC_PROD) run --rm -v $(shell pwd)/backend/data_logic.json:/app/data_logic.json backend python app/tasks/fix_payments_data.py data_logic.json
 
 prod-superuser:
 	$(PICCOLO_PROD) user create
