@@ -15,10 +15,10 @@ PICCOLO_PROD = $(DC_PROD) exec backend piccolo
 .PHONY: dev-build dev-up dev-down dev-stop dev-restart dev-logs dev-shell \
         dev-makemigrations dev-makemigrations-manual dev-migrate dev-superuser \
         dev-redis-flush dev-db-up dev-migrate-init dev-import-data \
-        dev-fix-payments dev-webhook-set dev-webhook-delete \
+        dev-fix-payments dev-recalculate dev-webhook-set dev-webhook-delete \
         prod-build prod-up prod-down prod-stop prod-restart prod-logs prod-shell \
         prod-build-front prod-migrate prod-migrate-init prod-import-data prod-superuser \
-        prod-fix-payments prod-webhook-set prod-webhook-delete \
+        prod-fix-payments prod-recalculate prod-webhook-set prod-webhook-delete \
         prod-test-ssl prod-get-ssl prod-renew-ssl
 
 # ================= DEVELOPMENT =================
@@ -71,6 +71,9 @@ dev-import-data:
 dev-fix-payments:
 	$(DC_DEV) exec backend python app/tasks/fix_payments_data.py $(or $(file),data_logic.json)
 
+dev-recalculate:
+	$(DC_DEV) exec backend python app/tasks/recalculate_subscriptions.py $(args)
+
 dev-webhook-set:
 	$(DC_DEV) exec backend python app/tasks/manage_webhook.py set
 
@@ -119,6 +122,9 @@ prod-import-data:
 
 prod-fix-payments:
 	$(DC_PROD) run --rm -v $(shell pwd)/backend/data_logic.json:/app/data_logic.json backend python app/tasks/fix_payments_data.py data_logic.json
+
+prod-recalculate:
+	$(DC_PROD) run --rm -v $(shell pwd)/clients.json:/app/clients.json backend python app/tasks/recalculate_subscriptions.py clients.json $(args)
 
 prod-superuser:
 	$(PICCOLO_PROD) user create
