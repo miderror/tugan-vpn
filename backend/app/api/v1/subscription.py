@@ -9,6 +9,13 @@ from piccolo.querystring import QueryString
 db_engine = engine_finder()
 
 
+EXPIRED_VLESS_LINK = (
+    b"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1"
+    b"?security=none&type=tcp#%F0%9F%9A%A8%20%D0%92%D0%B0%D1%88%D0%B0%20%D0%BF%D0%BE%D0%B4%D0%BF%D0%B8%D1%81%D0%BA%D0%B0%20%D0%BD%D0%B5%D0%B0%D0%BA%D1%82%D0%B8%D0%B2%D0%BD%D0%B0"
+)
+EXPIRED_SUB_B64 = base64.b64encode(EXPIRED_VLESS_LINK)
+
+
 class SubscriptionController(Controller):
     path = "/api/sub"
 
@@ -38,7 +45,7 @@ class SubscriptionController(Controller):
         expiry_ts = int(user["expiry_date"].timestamp())
 
         if not user["is_active_vpn"] or expiry_ts < now_ts:
-            b64_payload = b""
+            b64_payload = EXPIRED_SUB_B64
         else:
             client_id = user["client_id"]
             node_rows = await db_engine.run_querystring(

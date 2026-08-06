@@ -15,10 +15,10 @@ PICCOLO_PROD = $(DC_PROD) exec backend piccolo
 .PHONY: dev-build dev-up dev-down dev-stop dev-restart dev-logs dev-shell \
         dev-makemigrations dev-makemigrations-manual dev-migrate dev-superuser \
         dev-redis-flush dev-db-up dev-migrate-init dev-import-data \
-        dev-webhook-set dev-webhook-delete \
+        dev-fix-payments dev-webhook-set dev-webhook-delete \
         prod-build prod-up prod-down prod-stop prod-restart prod-logs prod-shell \
         prod-build-front prod-migrate prod-migrate-init prod-import-data prod-superuser \
-        prod-webhook-set prod-webhook-delete \
+        prod-fix-payments prod-webhook-set prod-webhook-delete \
         prod-test-ssl prod-get-ssl prod-renew-ssl
 
 # ================= DEVELOPMENT =================
