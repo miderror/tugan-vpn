@@ -9,6 +9,19 @@ from piccolo.querystring import QueryString
 
 db_engine = engine_finder()
 
+UPDATE_TARIFFS_SQL = """
+UPDATE core_payment
+SET tariff_id = CASE
+    WHEN amount = 210.00 THEN 1
+    WHEN amount = 585.00 THEN 2
+    WHEN amount = 1080.00 THEN 3
+    WHEN amount = 2007.00 THEN 4
+    ELSE COALESCE(
+        (SELECT id FROM core_tariff WHERE price = core_payment.amount LIMIT 1),
+        1
+    )
+END;
+"""
 
 
 async def fix_payments_and_schema(json_file_path: str):
@@ -34,6 +47,12 @@ async def fix_payments_and_schema(json_file_path: str):
                 updates_count += 1
 
     print(f"[SUCCESS] Обновлено {updates_count} старых платежей!")
+
+    print("[+] Сопоставление сумм платежей с тарифными планами (tariff_id)...")
+    await db_engine.run_querystring(QueryString(UPDATE_TARIFFS_SQL))
+    print(
+        "[SUCCESS] Все tariff_id успешно распределены по суммам (210₽->1, 585₽->2, 1080₽->3, 2007₽->4)!"
+    )
 
 
 if __name__ == "__main__":
